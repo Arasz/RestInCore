@@ -1,0 +1,6 @@
+#From dotnet github profile
+*.swp
+*.*~
+bin/
+obj/
+project.lock.json
