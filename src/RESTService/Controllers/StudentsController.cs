@@ -1,11 +1,27 @@
 ﻿using Microsoft.AspNet.Mvc;
+using RESTService.Repository;
 using System.Collections.Generic;
+using System.Linq;
+using RESTService.Models;
 
 namespace RESTService.Controllers
 {
+    /// <summary>
+    /// Web service controller 
+    /// </summary>
     [Route("api/[controller]")]
-    public class ValuesController : Controller
+    public class StudentsController : Controller
     {
+        /// <summary>
+        /// Application data access abstract layer 
+        /// </summary>
+        private readonly IRepository<Student> _studentsRepository;
+
+        public StudentsController(IRepository<Student>  studentsRepository)
+        {
+            _studentsRepository = studentsRepository;
+        }
+
         // DELETE api/values/5
         [HttpDelete("{id}")]
         public void Delete(int id)
@@ -16,7 +32,7 @@ namespace RESTService.Controllers
         [HttpGet]
         public IEnumerable<string> Get()
         {
-            return new string[] { "value1", "value2" };
+            return _studentsRepository.RetriveAll().Select(student => student.ToString());
         }
 
         // GET api/values/5
