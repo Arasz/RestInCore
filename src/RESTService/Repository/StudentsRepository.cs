@@ -1,4 +1,5 @@
-﻿using RESTService.Models;
+﻿using System;
+using RESTService.Models;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,7 +12,11 @@ namespace RESTService.Repository
 
         public StudentsRepository()
         {
-            _students = new List<Student>();
+            _students = new List<Student>
+            {
+                new Student(){Birthday = DateTime.Today, Name = "Andrzej", Surname = "Tkacz"},
+                new Student(){Birthday = DateTime.Now, Name = "Kalina", Surname = "Wilk"}
+            };
         }
 
         public void Create(Student newItem) => _students.Add(newItem);
