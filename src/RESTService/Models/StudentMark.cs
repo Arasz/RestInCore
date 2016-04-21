@@ -10,13 +10,25 @@ namespace RESTService.Models
     public class StudentMark
     {
         [DataMember]
-        public Student Student { get; set; }
+        public int StudentId { get; set; }
 
         [DataMember]
         public DateTime SubmitTime { get; set; } = DateTime.Now;
 
         [DataMember]
         public Mark Value { get; set; } = Mark.Two;
+
+        public override bool Equals(object obj)
+        {
+            if (base.Equals(obj))
+                return true;
+            return ToString() == obj.ToString();
+        }
+
+        public override string ToString()
+        {
+            return $"{StudentId}, {SubmitTime}, {Value}";
+        }
     }
 
     /// <summary>
