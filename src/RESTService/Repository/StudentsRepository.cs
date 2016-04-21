@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 namespace RESTService.Repository
 {
+    /// <summary>
+    /// Repository containing Students 
+    /// </summary>
     public class StudentsRepository : BaseRepository<Student>
     {
         public StudentsRepository()
