@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RESTService.Models;
+using RESTService.Providers;
 using RESTService.Repository;
 
 namespace RESTService
@@ -17,13 +18,6 @@ namespace RESTService
             // Set up configuration sources.
             var builder = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json");
-
-            if (env.IsEnvironment("Development"))
-            {
-                // This will push telemetry data through Application Insights pipeline faster,
-                // allowing you to view results immediately.
-                builder.AddApplicationInsightsSettings(developerMode: true);
-            }
 
             builder.AddEnvironmentVariables();
             Configuration = builder.Build().ReloadOnChanged("appsettings.json");
@@ -40,10 +34,6 @@ namespace RESTService
 
             app.UseIISPlatformHandler();
 
-            app.UseApplicationInsightsRequestTelemetry();
-
-            app.UseApplicationInsightsExceptionTelemetry();
-
             app.UseStaticFiles();
 
             app.UseMvc();
@@ -57,6 +47,7 @@ namespace RESTService
 
             services.AddMvc();
             services.AddSingleton<IRepository<Student>, StudentsRepository>();
+            services.AddSingleton<UniqueIdProvider, UniqueIdProvider>();
         }
     }
 }
