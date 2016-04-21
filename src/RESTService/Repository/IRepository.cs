@@ -19,21 +19,27 @@ namespace RESTService.Repository
         /// <summary>
         /// Returns item under given index 
         /// </summary>
-        /// <param name="index"> Index of retrieved item </param>
+        /// <param name="id"> Index of retrieved item </param>
         /// <returns></returns>
-        T Retrieve(int index);
+        T Read(int id);
 
         /// <summary>
         /// Returns all items form repository 
         /// </summary>
         /// <returns></returns>
-        IEnumerable<T> RetrieveAll();
+        IEnumerable<T> ReadAll();
 
         /// <summary>
         /// Updates item in repository 
         /// </summary>
-        /// <param name="index"> Updated item <paramref name="index"/> </param>
         /// <param name="item"> New item </param>
-        void Update(int index, T item);
+        void Update(T item);
+
+        /// <summary>
+        /// Updates item under given id 
+        /// </summary>
+        /// <param name="id"> Item id </param>
+        /// <param name="item"> New item </param>
+        void Update(int id, T item);
     }
 }

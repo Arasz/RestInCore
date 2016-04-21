@@ -7,7 +7,7 @@ namespace RESTService.Repository
     /// Basic repository implementation 
     /// </summary>
     /// <typeparam name="T"> Item type </typeparam>
-    public class BaseRepository<T> : IRepository<T>
+    public abstract class BaseRepository<T> : IRepository<T>
     {
         protected IList<T> _itemsCollection;
 
@@ -20,10 +20,12 @@ namespace RESTService.Repository
 
         public virtual void Delete(T item) => _itemsCollection.Remove(item);
 
-        public virtual T Retrieve(int index) => _itemsCollection[index];
+        public virtual T Read(int id) => _itemsCollection.ElementAt(id);
 
-        public virtual IEnumerable<T> RetrieveAll() => _itemsCollection.ToList();
+        public virtual IEnumerable<T> ReadAll() => _itemsCollection.ToList();
 
-        public virtual void Update(int index, T item) => _itemsCollection[index] = item;
+        public abstract void Update(T item);
+
+        public abstract void Update(int id, T item);
     }
 }
