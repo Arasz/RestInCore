@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNet.Mvc;
+using RESTService.Models;
 using RESTService.Repository;
 using System.Collections.Generic;
 using System.Linq;
-using RESTService.Models;
 
 namespace RESTService.Controllers
 {
@@ -17,7 +17,7 @@ namespace RESTService.Controllers
         /// </summary>
         private readonly IRepository<Student> _studentsRepository;
 
-        public StudentsController(IRepository<Student>  studentsRepository)
+        public StudentsController(IRepository<Student> studentsRepository)
         {
             _studentsRepository = studentsRepository;
         }
@@ -32,7 +32,7 @@ namespace RESTService.Controllers
         [HttpGet]
         public IEnumerable<string> Get()
         {
-            return _studentsRepository.RetriveAll().Select(student => student.ToString());
+            return _studentsRepository.RetrieveAll().Select(student => student.ToString());
         }
 
         // GET api/values/5
