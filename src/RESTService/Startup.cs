@@ -44,6 +44,8 @@ namespace RESTService
         {
             // Add framework services.
 
+            services.AddApplicationInsightsTelemetry(Configuration);
+
             services.AddMvc();
             services.AddSingleton<IRepository<Entity>, Repository.Repository>();
             services.AddSingleton<UniqueIdentityProvider, UniqueIdentityProvider>();

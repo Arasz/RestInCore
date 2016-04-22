@@ -46,14 +46,14 @@ namespace RESTService.Controllers
         /// <summary>
         /// Get student with given id number 
         /// </summary>
-        /// <param name="studentId"> Unique id number </param>
+        /// <param name="id"> Unique id number </param>
         /// <returns> Student with given id number </returns>
         [HttpGet("{id}")]
-        public IActionResult Get(int studentId)
+        public IActionResult Get(int id)
         {
             try
             {
-                var student = _entitiesRepository.Read(studentId);
+                var student = _entitiesRepository.Read(id);
                 return Json(student);
             }
             catch (KeyNotFoundException exception)
@@ -66,7 +66,7 @@ namespace RESTService.Controllers
         /// Get all students 
         /// </summary>
         /// <returns> Students collection </returns>
-        [HttpGet(Name = "GetAll")]
+        [HttpGet]
         public IActionResult GetAll()
         {
             var allStudents = _entitiesRepository.ReadAll<Student>();

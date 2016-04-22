@@ -26,7 +26,7 @@ namespace RESTService.Utils
             InitializeMarks();
             InitializeSubjects();
 
-            Data = _students.Concat<Entity>(_marks).Concat(_subjects);
+            Data = _students.Concat<Entity>(_marks).Concat(_subjects).ToList();
         }
 
         private DateTime GenerateRandomDate(int year = 0)

@@ -18,7 +18,7 @@ namespace RESTService.Repository
         /// All students collection 
         /// </summary>
         [DataMember]
-        private readonly Dictionary<int, Entity> _entities;
+        private readonly Dictionary<int, Entity> _entities = new Dictionary<int, Entity>();
 
         public Repository(UniqueIdentityProvider identityProvider)
         {
@@ -59,7 +59,7 @@ namespace RESTService.Repository
 
         public IEnumerable<Entity> ReadAll<T>()
         {
-            return _entities.Values.Where(entity => typeof(Entity) == typeof(T)).ToList();
+            return _entities.Values.Where(entity => entity.GetType() == typeof(T)).ToList();
         }
 
         /// <exception cref="ArgumentException"> "Can't find entity in repository </exception>
