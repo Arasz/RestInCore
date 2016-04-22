@@ -48,7 +48,7 @@ namespace RESTService.Controllers
         /// </summary>
         /// <param name="id"> Unique id number </param>
         /// <returns> Student with given id number </returns>
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetSubject")]
         public IActionResult Get(int id)
         {
             try
@@ -89,7 +89,7 @@ namespace RESTService.Controllers
                 return HttpBadRequest();
 
             _entitiesRepository.Create(subject);
-            return Ok();
+            return CreatedAtRoute("GetSubject", new { controller = "Subjects", id = subject.Id }, subject); ;
         }
 
         /// <summary>

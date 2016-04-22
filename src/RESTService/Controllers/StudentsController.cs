@@ -118,7 +118,7 @@ namespace RESTService.Controllers
                 return HttpBadRequest();
 
             _entitiesRepository.Create(student);
-            return CreatedAtRoute("GetStudent", student.Id, student);
+            return CreatedAtRoute("GetStudent", new {controller = "Students", id = student.Id}, student);
         }
 
         /// <summary>

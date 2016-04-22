@@ -48,7 +48,7 @@ namespace RESTService
 
             services.AddMvc();
             services.AddSingleton<IRepository<Entity>, Repository.Repository>();
-            services.AddSingleton<UniqueIdentityProvider, UniqueIdentityProvider>();
+            services.AddSingleton<IIdentityProvider<int>, UniqueIdentityProvider>();
         }
     }
 }

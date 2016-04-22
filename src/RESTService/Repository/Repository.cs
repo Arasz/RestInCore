@@ -20,8 +20,12 @@ namespace RESTService.Repository
         [DataMember]
         private readonly Dictionary<int, Entity> _entities = new Dictionary<int, Entity>();
 
-        public Repository(UniqueIdentityProvider identityProvider)
+        private readonly IIdentityProvider<int> _identityProvider;
+
+        public Repository(IIdentityProvider<int> identityProvider)
         {
+            _identityProvider = identityProvider;
+
             IEnumerable<Entity> initializationList = new DataInitializer(identityProvider).Data;
 
             foreach (var entity in initializationList)
@@ -32,10 +36,11 @@ namespace RESTService.Repository
 
         public void Create(Entity item)
         {
-            var studentId = item.Id;
-
-            if (_entities.ContainsKey(studentId))
+            if (_entities.ContainsKey(item.Id))
                 return;
+
+            if (item.Id == 0)
+                item.Id = _identityProvider.Id;
 
             _entities[item.Id] = item;
         }
