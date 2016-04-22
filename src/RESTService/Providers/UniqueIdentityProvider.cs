@@ -9,7 +9,7 @@ namespace RESTService.Providers
     public class UniqueIdentityProvider : IIdentityProvider<int>
     {
         [DataMember]
-        private int _lastId = 0;
+        private int _lastId = 1;
 
         public int Id => _lastId++;
     }

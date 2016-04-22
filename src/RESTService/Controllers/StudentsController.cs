@@ -3,6 +3,7 @@ using RESTService.Models;
 using RESTService.Repository;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RESTService.Controllers
 {
@@ -23,11 +24,11 @@ namespace RESTService.Controllers
         }
 
         /// <summary>
-        /// Delete student with given id number 
+        /// Delete student with given studentId number 
         /// </summary>
-        /// <param name="id"> Unique id number </param>
+        /// <param name="id"> Unique studentId number </param>
         /// <returns> Information about operation state </returns>
-        [HttpDelete("{id}")]
+        [HttpDelete("{studentId}")]
         public IActionResult Delete(int id)
         {
             try
@@ -44,11 +45,11 @@ namespace RESTService.Controllers
         }
 
         /// <summary>
-        /// Get student with given id number 
+        /// Get student with given studentId number 
         /// </summary>
-        /// <param name="id"> Unique id number </param>
-        /// <returns> Student with given id number </returns>
-        [HttpGet("{id}")]
+        /// <param name="id"> Unique studentId number </param>
+        /// <returns> Student with given studentId number </returns>
+        [HttpGet("{id}", Name = "GetStudent")]
         public IActionResult Get(int id)
         {
             try
@@ -77,6 +78,34 @@ namespace RESTService.Controllers
             return HttpNotFound();
         }
 
+        [HttpGet("{studentId}/marks/{markId:int?}")]
+        public IActionResult GetMarksForGivenStudent(int studentId, int markId)
+        {
+            try
+            {
+                if (markId > 0)
+                {
+                    var studentMark = _entitiesRepository.Read(markId) as StudentMark;
+
+                    if (studentMark == null || studentId != studentMark.StudentId)
+                        return HttpBadRequest("Wrong mark id");
+
+                    return Ok(studentMark);
+                }
+
+                var marks = _entitiesRepository.ReadAll<StudentMark>().Where(mark => mark.StudentId == studentId).ToList();
+
+                if (!marks.Any())
+                    return HttpNotFound("Student doesn't have any marks");
+
+                return Ok(marks);
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return HttpNotFound(exception);
+            }
+        }
+
         /// <summary>
         /// Creates new student in repository 
         /// </summary>
@@ -89,16 +118,16 @@ namespace RESTService.Controllers
                 return HttpBadRequest();
 
             _entitiesRepository.Create(student);
-            return Ok();
+            return CreatedAtRoute("GetStudent", student.Id, student);
         }
 
         /// <summary>
-        /// Updates student under given id 
+        /// Updates student under given studentId 
         /// </summary>
-        /// <param name="id"> Update student id </param>
+        /// <param name="id"> Update student studentId </param>
         /// <param name="student"> New student state </param>
         /// <returns></returns>
-        [HttpPut("{id}")]
+        [HttpPut("{studentId}")]
         public IActionResult Put(int id, [FromBody]Student student)
         {
             if (student == null)

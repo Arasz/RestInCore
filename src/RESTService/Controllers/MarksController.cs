@@ -1,43 +1,120 @@
 ﻿using Microsoft.AspNet.Mvc;
+using RESTService.Models;
+using RESTService.Repository;
+using System;
 using System.Collections.Generic;
-
-// For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace RESTService.Controllers
 {
+    /// <summary>
+    /// Web service controller 
+    /// </summary>
     [Route("api/[controller]")]
     public class MarksController : Controller
     {
-        // DELETE api/values/5
+        /// <summary>
+        /// Application data access abstract layer 
+        /// </summary>
+        private readonly IRepository<Entity> _entitiesRepository;
+
+        public MarksController(IRepository<Entity> entitiesRepository)
+        {
+            _entitiesRepository = entitiesRepository;
+        }
+
+        /// <summary>
+        /// Delete mark with given id number 
+        /// </summary>
+        /// <param name="id"> Unique id number </param>
+        /// <returns> Information about operation state </returns>
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            try
+            {
+                var mark = _entitiesRepository.Read(id);
+                _entitiesRepository.Delete(mark);
+
+                return Ok();
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return HttpNotFound(exception);
+            }
         }
 
-        // GET: api/values
+        /// <summary>
+        /// Get mark with given id number 
+        /// </summary>
+        /// <param name="id"> Unique id number </param>
+        /// <returns> Student with given id number </returns>
+        [HttpGet("{id}", Name = "GetMark")]
+        public IActionResult Get(int id)
+        {
+            try
+            {
+                var mark = _entitiesRepository.Read(id);
+                if (mark is StudentMark)
+                    return Ok(mark);
+                return HttpBadRequest("There is no student mark with this id");
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return HttpNotFound(exception);
+            }
+        }
+
+        /// <summary>
+        /// Get all marks 
+        /// </summary>
+        /// <returns> Students collection </returns>
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IActionResult GetAll()
         {
-            return new string[] { "value1", "value2" };
+            var allMarks = _entitiesRepository.ReadAll<StudentMark>();
+
+            if (allMarks != null)
+                return Json(allMarks);
+
+            return HttpNotFound();
         }
 
-        // GET api/values/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST api/values
+        /// <summary>
+        /// Creates new mark in repository 
+        /// </summary>
+        /// <param name="mark"> New mark </param>
+        /// <returns></returns>
         [HttpPost]
-        public void Post([FromBody]string value)
+        public IActionResult Post([FromBody]StudentMark mark)
         {
+            if (mark == null)
+                return HttpBadRequest();
+
+            _entitiesRepository.Create(mark);
+            return CreatedAtRoute("GetStudent", new { id = mark.Id }, mark);
         }
 
-        // PUT api/values/5
+        /// <summary>
+        /// Updates mark under given id 
+        /// </summary>
+        /// <param name="id"> Update mark id </param>
+        /// <param name="mark"> New mark state </param>
+        /// <returns></returns>
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        public IActionResult Put(int id, [FromBody]StudentMark mark)
         {
+            if (mark == null)
+                return HttpBadRequest();
+
+            try
+            {
+                _entitiesRepository.Update(id, mark);
+                return Ok();
+            }
+            catch (Exception exception)
+            {
+                return HttpBadRequest(exception);
+            }
         }
     }
 }
