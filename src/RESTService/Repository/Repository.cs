@@ -57,9 +57,9 @@ namespace RESTService.Repository
             return _entities[id];
         }
 
-        public IEnumerable<Entity> ReadAll<T>()
+        public IEnumerable<T> ReadAll<T>()
         {
-            return _entities.Values.Where(entity => entity.GetType() == typeof(T)).ToList();
+            return _entities.Values.Where(entity => entity.GetType() == typeof(T)).Cast<T>().ToList();
         }
 
         /// <exception cref="ArgumentException"> "Can't find entity in repository </exception>

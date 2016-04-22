@@ -28,7 +28,7 @@ namespace RESTService.Repository
         /// Returns all items form repository 
         /// </summary>
         /// <returns></returns>
-        IEnumerable<T> ReadAll<E>();
+        IEnumerable<E> ReadAll<E>();
 
         /// <summary>
         /// Updates item in repository 
