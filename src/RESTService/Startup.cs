@@ -45,8 +45,7 @@ namespace RESTService
             // Add framework services.
 
             services.AddMvc();
-            services.AddSingleton<IRepository<Student>, Repository.Repository>();
-            services.AddSingleton<IRepository<Subject>, BaseRepository<Subject>>();
+            services.AddSingleton<IRepository<Entity>, Repository.Repository>();
             services.AddSingleton<UniqueIdentityProvider, UniqueIdentityProvider>();
         }
     }

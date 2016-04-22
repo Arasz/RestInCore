@@ -10,28 +10,28 @@ namespace RestInCore.Tests
     {
         [Theory]
         [MemberData(nameof(CreateStudent), 1, "T", "P", "1992-02-12")]
-        public void EqualityTest_TheSameObject_ObjectsEqual(Student student)
+        public void EqualityTest_TheSameObject_ObjectsEqual(Student subject)
         {
-            var secondStudent = student;
+            var secondStudent = subject;
 
-            bool areEqual = student.Equals(secondStudent);
+            bool areEqual = subject.Equals(secondStudent);
 
             areEqual.Should().BeTrue();
         }
 
         [Theory]
         [MemberData(nameof(CreateStudent), 1, "T", "P", "1992-02-12")]
-        public void EqualityTest_TheSameObjectsWithDifferentReferences_ObjectsEqual(Student student)
+        public void EqualityTest_TheSameObjectsWithDifferentReferences_ObjectsEqual(Student subject)
         {
             var secondStudent = new Student
             {
-                Id = student.Id,
-                Name = student.Name,
-                Surname = student.Surname,
-                Birthday = student.Birthday
+                Id = subject.Id,
+                Name = subject.Name,
+                Surname = subject.Surname,
+                Birthday = subject.Birthday
             };
 
-            bool areEqual = student.Equals(secondStudent);
+            bool areEqual = subject.Equals(secondStudent);
 
             areEqual.Should().BeTrue();
         }
@@ -41,7 +41,7 @@ namespace RestInCore.Tests
         [MemberData(nameof(CreateStudent), 1, "A", "P", "1992-02-12")]
         [MemberData(nameof(CreateStudent), 2, "T", "P", "1992-02-12")]
         [MemberData(nameof(CreateStudent), 1, "T", "P", "1994-04-12")]
-        public void EqualityTest_TwoEqualObjectsWithDifferentReferences_ObjectsEqual(Student student)
+        public void EqualityTest_TwoEqualObjectsWithDifferentReferences_ObjectsEqual(Student subject)
         {
             var firstStudent = new Student
             {
@@ -51,7 +51,7 @@ namespace RestInCore.Tests
                 Birthday = DateTime.Parse("1992-02-12"),
             };
 
-            bool areEqual = firstStudent.Equals(student);
+            bool areEqual = firstStudent.Equals(subject);
 
             areEqual.Should().BeFalse();
         }

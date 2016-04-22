@@ -1,34 +1,39 @@
 ﻿using Microsoft.AspNet.Mvc;
 using RESTService.Models;
 using RESTService.Repository;
+using System;
 using System.Collections.Generic;
-
-// For more information on enabling Web API for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace RESTService.Controllers
 {
+    /// <summary>
+    /// Web service controller 
+    /// </summary>
     [Route("api/[controller]")]
     public class SubjectsController : Controller
     {
-        private IRepository<Subject> _subjects;
+        /// <summary>
+        /// Application data access abstract layer 
+        /// </summary>
+        private readonly IRepository<Entity> _entitiesRepository;
 
-        public SubjectsController(IRepository<Subject> subjects)
+        public SubjectsController(IRepository<Entity> entitiesRepository)
         {
-            _subjects = subjects;
+            _entitiesRepository = entitiesRepository;
         }
 
         /// <summary>
-        /// Delete student with given id number 
+        /// Delete subject with given id number 
         /// </summary>
-        /// <param name="studentId"> Unique id number </param>
+        /// <param name="id"> Unique id number </param>
         /// <returns> Information about operation state </returns>
-        [HttpDelete("{studentId}")]
-        public IActionResult Delete(int studentId)
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
         {
             try
             {
-                var student = _subjects.Read(studentId);
-                _subjects.Delete(student);
+                var subject = _entitiesRepository.Read(id);
+                _entitiesRepository.Delete(subject);
 
                 return Ok();
             }
@@ -39,17 +44,17 @@ namespace RESTService.Controllers
         }
 
         /// <summary>
-        /// Get student with given id number 
+        /// Get subject with given id number 
         /// </summary>
-        /// <param name="studentId"> Unique id number </param>
+        /// <param name="id"> Unique id number </param>
         /// <returns> Student with given id number </returns>
-        [HttpGet("{studentId}")]
-        public IActionResult Get(int studentId)
+        [HttpGet("{id}")]
+        public IActionResult Get(int id)
         {
             try
             {
-                var student = _subjects.Read(studentId);
-                return Json(student);
+                var subject = _entitiesRepository.Read(id);
+                return Json(subject);
             }
             catch (KeyNotFoundException exception)
             {
@@ -64,44 +69,44 @@ namespace RESTService.Controllers
         [HttpGet(Name = "GetAll")]
         public IActionResult GetAll()
         {
-            var allStudents = _subjects.ReadAll();
+            var allSubjects = _entitiesRepository.ReadAll<Subject>();
 
-            if (allStudents != null)
-                return Json(allStudents);
+            if (allSubjects != null)
+                return Json(allSubjects);
 
             return HttpNotFound();
         }
 
         /// <summary>
-        /// Creates new student in repository 
+        /// Creates new subject in repository 
         /// </summary>
-        /// <param name="student"> New student </param>
+        /// <param name="subject"> New subject </param>
         /// <returns></returns>
         [HttpPost]
-        public IActionResult Post([FromBody]Student student)
+        public IActionResult Post([FromBody]Subject subject)
         {
-            if (student == null)
+            if (subject == null)
                 return HttpBadRequest();
 
-            _subjects.Create(student);
+            _entitiesRepository.Create(subject);
             return Ok();
         }
 
         /// <summary>
-        /// Updates student under given id 
+        /// Updates subject under given id 
         /// </summary>
-        /// <param name="studentId"> Update student id </param>
-        /// <param name="student"> New student state </param>
+        /// <param name="id"> Update subject id </param>
+        /// <param name="subject"> New subject state </param>
         /// <returns></returns>
-        [HttpPut("{studentId}")]
-        public IActionResult Put(int studentId, [FromBody]Student student)
+        [HttpPut("{id}")]
+        public IActionResult Put(int id, [FromBody]Subject subject)
         {
-            if (student == null)
+            if (subject == null)
                 return HttpBadRequest();
 
             try
             {
-                _subjects.Update(studentId, student);
+                _entitiesRepository.Update(id, subject);
                 return Ok();
             }
             catch (Exception exception)

@@ -15,25 +15,25 @@ namespace RESTService.Controllers
         /// <summary>
         /// Application data access abstract layer 
         /// </summary>
-        private readonly IRepository<Student> _studentsRepository;
+        private readonly IRepository<Entity> _entitiesRepository;
 
-        public StudentsController(IRepository<Student> studentsRepository)
+        public StudentsController(IRepository<Entity> entitiesRepository)
         {
-            _studentsRepository = studentsRepository;
+            _entitiesRepository = entitiesRepository;
         }
 
         /// <summary>
         /// Delete student with given id number 
         /// </summary>
-        /// <param name="studentId"> Unique id number </param>
+        /// <param name="id"> Unique id number </param>
         /// <returns> Information about operation state </returns>
-        [HttpDelete("{studentId}")]
-        public IActionResult Delete(int studentId)
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
         {
             try
             {
-                var student = _studentsRepository.Read(studentId);
-                _studentsRepository.Delete(student);
+                var student = _entitiesRepository.Read(id);
+                _entitiesRepository.Delete(student);
 
                 return Ok();
             }
@@ -48,12 +48,12 @@ namespace RESTService.Controllers
         /// </summary>
         /// <param name="studentId"> Unique id number </param>
         /// <returns> Student with given id number </returns>
-        [HttpGet("{studentId}")]
+        [HttpGet("{id}")]
         public IActionResult Get(int studentId)
         {
             try
             {
-                var student = _studentsRepository.Read(studentId);
+                var student = _entitiesRepository.Read(studentId);
                 return Json(student);
             }
             catch (KeyNotFoundException exception)
@@ -69,7 +69,7 @@ namespace RESTService.Controllers
         [HttpGet(Name = "GetAll")]
         public IActionResult GetAll()
         {
-            var allStudents = _studentsRepository.ReadAll();
+            var allStudents = _entitiesRepository.ReadAll<Student>();
 
             if (allStudents != null)
                 return Json(allStudents);
@@ -88,25 +88,25 @@ namespace RESTService.Controllers
             if (student == null)
                 return HttpBadRequest();
 
-            _studentsRepository.Create(student);
+            _entitiesRepository.Create(student);
             return Ok();
         }
 
         /// <summary>
         /// Updates student under given id 
         /// </summary>
-        /// <param name="studentId"> Update student id </param>
+        /// <param name="id"> Update student id </param>
         /// <param name="student"> New student state </param>
         /// <returns></returns>
-        [HttpPut("{studentId}")]
-        public IActionResult Put(int studentId, [FromBody]Student student)
+        [HttpPut("{id}")]
+        public IActionResult Put(int id, [FromBody]Student student)
         {
             if (student == null)
                 return HttpBadRequest();
 
             try
             {
-                _studentsRepository.Update(studentId, student);
+                _entitiesRepository.Update(id, student);
                 return Ok();
             }
             catch (Exception exception)
