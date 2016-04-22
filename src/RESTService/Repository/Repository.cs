@@ -57,7 +57,7 @@ namespace RESTService.Repository
             return _entities[id];
         }
 
-        public IEnumerable<T> ReadAll<T>()
+        public IEnumerable<T> ReadAll<T>() where T : Entity
         {
             return _entities.Values.Where(entity => entity.GetType() == typeof(T)).Cast<T>().ToList();
         }
