@@ -6,7 +6,7 @@ namespace RESTService.Providers
     /// Provides unique id number 
     /// </summary>
     [DataContract]
-    public class UniqueIdProvider
+    public class UniqueIdentityProvider : IIdentityProvider<int>
     {
         [DataMember]
         private int _lastId = 0;

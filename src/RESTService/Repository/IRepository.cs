@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using RESTService.Models;
+using System.Collections.Generic;
 
 namespace RESTService.Repository
 {
-    public interface IRepository<T>
+    public interface IRepository<T> where T : Entity
     {
         /// <summary>
         /// Adds new item to repository 

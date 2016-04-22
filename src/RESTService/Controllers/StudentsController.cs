@@ -22,7 +22,6 @@ namespace RESTService.Controllers
             _studentsRepository = studentsRepository;
         }
 
-        // DELETE api/values/5
         /// <summary>
         /// Delete student with given id number 
         /// </summary>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RESTService.Providers;
+using System;
 using System.Runtime.Serialization;
 
 namespace RESTService.Models
@@ -7,23 +8,22 @@ namespace RESTService.Models
     /// Student data model 
     /// </summary>
     [DataContract]
-    public class Student
+    public class Student : Entity
     {
         [DataMember]
-        public DateTime Birthday { get; set; } = DateTime.MinValue;
+        public DateTime Birthday { get; private set; }
 
         [DataMember]
-        public int Id { get; set; }
+        public string Name { get; private set; }
 
         [DataMember]
-        public string Name { get; set; } = "";
+        public string Surname { get; private set; }
 
-        [DataMember]
-        public string Surname { get; set; } = "";
-
-        public override string ToString()
+        public Student(string name, string surname, DateTime birthday, IIdentityProvider<int> identityProvider) : base(identityProvider)
         {
-            return $"{Id}, {Name}, {Surname}, {Birthday}";
+            Name = name;
+            Surname = surname;
+            Birthday = birthday;
         }
 
         public override bool Equals(object obj)
@@ -34,7 +34,16 @@ namespace RESTService.Models
             var otherStudent = obj as Student;
 
             return ToString() == otherStudent.ToString();
+        }
 
+        public override int GetHashCode()
+        {
+            return base.GetHashCode() + Birthday.GetHashCode() + Name.GetHashCode() + Surname.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return $"{Id}, {Name}, {Surname}, {Birthday}";
         }
     }
 }
