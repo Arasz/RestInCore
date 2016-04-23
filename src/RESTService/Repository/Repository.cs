@@ -34,23 +34,32 @@ namespace RESTService.Repository
             }
         }
 
-        public void Create(Entity item)
+        public void Create(Entity entity)
         {
-            if (_entities.ContainsKey(item.Id))
+            if (_entities.ContainsKey(entity.Id))
                 return;
 
-            if (item.Id == 0)
-                item.Id = _identityProvider.Id;
+            if (entity.Id == 0)
+                entity.Id = _identityProvider.Id;
 
-            _entities[item.Id] = item;
+            _entities[entity.Id] = entity;
         }
 
         /// <exception cref="KeyNotFoundException"> Student with given id don't exist </exception>
-        public void Delete(Entity item)
+        public void Delete(Entity entity)
         {
-            if (!_entities.ContainsKey(item.Id))
+            if (!_entities.ContainsKey(entity.Id))
                 throw new KeyNotFoundException("Student with given id don't exist");
-            _entities.Remove(item.Id);
+            _entities.Remove(entity.Id);
+        }
+
+        /// <exception cref="ArgumentNullException"> <paramref name="key"/> is null. </exception>
+        public void DeleteAll<E>() where E : Entity
+        {
+            foreach (var entity in _entities.Where(entity => entity.Value is E))
+            {
+                _entities.Remove(entity.Key);
+            }
         }
 
         /// <exception cref="KeyNotFoundException"> Condition. </exception>
@@ -68,20 +77,20 @@ namespace RESTService.Repository
         }
 
         /// <exception cref="ArgumentException"> "Can't find entity in repository </exception>
-        public void Update(Entity item)
+        public void Update(Entity entity)
         {
-            Update(item.Id, item);
+            Update(entity.Id, entity);
         }
 
-        public void Update(int id, Entity item)
+        public void Update(int id, Entity entity)
         {
             if (!_entities.ContainsKey(id))
                 throw new ArgumentException("Can't find entity in repository");
 
-            if (id != item.Id)
+            if (id != entity.Id)
                 throw new ArgumentException("Given id different from student id");
 
-            _entities[id] = item;
+            _entities[id] = entity;
         }
     }
 }
