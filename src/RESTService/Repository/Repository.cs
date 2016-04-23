@@ -33,15 +33,17 @@ namespace RESTService.Repository
             }
         }
 
-        public void Create(Entity entity)
+        public int Create(Entity entity)
         {
             if (_entities.ContainsKey(entity.Id))
-                return;
+                return entity.Id;
 
             if (entity.Id == 0)
                 entity.Id = _identityProvider.Id;
 
             _entities[entity.Id] = entity;
+
+            return entity.Id;
         }
 
         /// <exception cref="KeyNotFoundException">
@@ -61,6 +63,11 @@ namespace RESTService.Repository
             {
                 _entities.Remove(entity.Key);
             }
+        }
+
+        public E Read<E>(int id) where E : Entity
+        {
+            return Read(id) as E;
         }
 
         /// <exception cref="KeyNotFoundException">

@@ -17,6 +17,11 @@ namespace RESTService.Controllers
         /// </summary>
         protected readonly IRepository<Entity> _entitiesRepository;
 
+        /// <summary>
+        /// <see cref="Controller"/> name taken form generic type <typeparamref name="T"/> 
+        /// </summary>
+        protected virtual string ControllerName { get; } = typeof(T).Name;
+
         public BaseController(IRepository<Entity> entitiesRepository)
         {
             _entitiesRepository = entitiesRepository;
@@ -67,15 +72,17 @@ namespace RESTService.Controllers
         }
 
         /// <summary>
-        /// Get entity with given studentId number 
+        /// Get entity with given id number 
         /// </summary>
         /// <param name="id"> Unique id number </param>
         /// <returns> Entity with given id number </returns>
-        [HttpGet("{id}", Name = "GetMethod")]
         public virtual IActionResult Get(int id)
         {
             try
             {
+                if (id == 0)
+                    return HttpBadRequest("Wrong id number");
+
                 var entity = _entitiesRepository.Read(id);
 
                 if (entity is T)
@@ -116,7 +123,8 @@ namespace RESTService.Controllers
                 return HttpBadRequest();
 
             _entitiesRepository.Create(entity);
-            return CreatedAtRoute("GetMethod", new { controller = GetType().Name.Replace("Controller", ""), id = entity.Id }, entity);
+            var controllerName = GetType().Name.Replace("Controller", "");
+            return CreatedAtRoute("GetMethod" + controllerName, new { controller = controllerName, id = entity.Id }, entity);
         }
 
         /// <summary>

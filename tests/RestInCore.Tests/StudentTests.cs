@@ -1,13 +1,17 @@
 ﻿using FluentAssertions;
 using RESTService.Models;
+using RESTService.Providers;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 
 namespace RestInCore.Tests
 {
     public class StudentTests
     {
+        private static IIdentityProvider<int> _identityProvider = new UniqueIdentityProvider();
+
         [Theory]
         [MemberData(nameof(CreateStudent), 1, "T", "P", "1992-02-12")]
         public void EqualityTest_TheSameObject_ObjectsEqual(Student subject)
@@ -23,13 +27,7 @@ namespace RestInCore.Tests
         [MemberData(nameof(CreateStudent), 1, "T", "P", "1992-02-12")]
         public void EqualityTest_TheSameObjectsWithDifferentReferences_ObjectsEqual(Student subject)
         {
-            var secondStudent = new Student
-            {
-                Id = subject.Id,
-                Name = subject.Name,
-                Surname = subject.Surname,
-                Birthday = subject.Birthday
-            };
+            var secondStudent = (Student)CreateStudent(1, "T", "P", "1992-02-12").First()[0];
 
             bool areEqual = subject.Equals(secondStudent);
 
@@ -43,13 +41,7 @@ namespace RestInCore.Tests
         [MemberData(nameof(CreateStudent), 1, "T", "P", "1994-04-12")]
         public void EqualityTest_TwoEqualObjectsWithDifferentReferences_ObjectsEqual(Student subject)
         {
-            var firstStudent = new Student
-            {
-                Id = 1,
-                Name = "T",
-                Surname = "P",
-                Birthday = DateTime.Parse("1992-02-12"),
-            };
+            var firstStudent = (Student)CreateStudent(1, "T", "P", "1992-02-12").First()[0];
 
             bool areEqual = firstStudent.Equals(subject);
 
@@ -58,9 +50,11 @@ namespace RestInCore.Tests
 
         private static IEnumerable<object[]> CreateStudent(int id, string name, string surname, string birthday)
         {
+            var student = new Student(name, surname, DateTime.Parse(birthday), _identityProvider);
+            student.Id = id;
             return new List<object[]>
             {
-                new []{new Student() {Id = id, Name = name, Surname = surname, Birthday = DateTime.Parse(birthday)}}
+                new []{student}
             };
         }
     }

@@ -13,7 +13,7 @@ namespace RESTService.Repository
         /// Adds new entity to repository 
         /// </summary>
         /// <param name="entity"></param>
-        void Create(T entity);
+        int Create(T entity);
 
         /// <summary>
         /// Removes entity from repository 
@@ -26,6 +26,14 @@ namespace RESTService.Repository
         /// </summary>
         /// <typeparam name="E"></typeparam>
         void DeleteAll<E>() where E : T;
+
+        /// <summary>
+        /// Returns entity of given type under given index 
+        /// </summary>
+        /// <param name="id"> Index of retrieved entity </param>
+        /// <typeparam name="E"> Retrieved entity type </typeparam>
+        /// <returns> If exist entity otherwise <see langword="null"/> </returns>
+        E Read<E>(int id) where E : Entity;
 
         /// <summary>
         /// Returns entity under given index 
