@@ -1,6 +1,5 @@
-﻿using System.Runtime.Serialization;
-using Microsoft.AspNet.Mvc;
-using RESTService.Providers;
+﻿using RESTService.Providers;
+using System.Runtime.Serialization;
 
 namespace RESTService.Models
 {
@@ -10,11 +9,11 @@ namespace RESTService.Models
     public class Entity
     {
         [DataMember]
-        public int Id { get; private set; }
+        public int Id { get; set; }
 
-        public Entity(IIdentityProvider<int> identityProvider )
+        public Entity(IIdentityProvider<int> identityProvider)
         {
-            Id = identityProvider.Id;
+            Id = identityProvider?.Id ?? 0;
         }
     }
 }

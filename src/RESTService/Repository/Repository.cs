@@ -1,7 +1,7 @@
-﻿using RESTService.Models;
+﻿using System;
+using RESTService.Models;
 using RESTService.Providers;
 using RESTService.Utils;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -20,8 +20,12 @@ namespace RESTService.Repository
         [DataMember]
         private readonly Dictionary<int, Entity> _entities = new Dictionary<int, Entity>();
 
-        public Repository(UniqueIdentityProvider identityProvider)
+        private readonly IIdentityProvider<int> _identityProvider;
+
+        public Repository(IIdentityProvider<int> identityProvider)
         {
+            _identityProvider = identityProvider;
+
             IEnumerable<Entity> initializationList = new DataInitializer(identityProvider).Data;
 
             foreach (var entity in initializationList)
@@ -30,29 +34,39 @@ namespace RESTService.Repository
             }
         }
 
-        public void Create(Entity item)
+        public void Create(Entity entity)
         {
-            var studentId = item.Id;
-
-            if (_entities.ContainsKey(studentId))
+            if (_entities.ContainsKey(entity.Id))
                 return;
 
-            _entities[item.Id] = item;
+            if (entity.Id == 0)
+                entity.Id = _identityProvider.Id;
+
+            _entities[entity.Id] = entity;
         }
 
-        /// <exception cref="KeyNotFoundException"> Student with given id don't exist </exception>
-        public void Delete(Entity item)
+        /// <exception cref="KeyNotFoundException"> <see cref="Entity"/> with given id don't exist </exception>
+        public void Delete(Entity entity)
         {
-            if (!_entities.ContainsKey(item.Id))
-                throw new KeyNotFoundException("Student with given id don't exist");
-            _entities.Remove(item.Id);
+            if (!_entities.ContainsKey(entity.Id))
+                throw new KeyNotFoundException("Entity with given id don't exist");
+            _entities.Remove(entity.Id);
         }
 
-        /// <exception cref="KeyNotFoundException"> Condition. </exception>
+        /// <exception cref="ArgumentNullException"> <paramref name="key"/> is null. </exception>
+        public void DeleteAll<E>() where E : Entity
+        {
+            foreach (var entity in _entities.Where(entity => entity.Value is E).ToList())
+            {
+                _entities.Remove(entity.Key);
+            }
+        }
+
+        /// <exception cref="KeyNotFoundException"> <see cref="Entity"/> with given id don't exist. </exception>
         public Entity Read(int id)
         {
             if (!_entities.ContainsKey(id))
-                throw new KeyNotFoundException("Student with given id don't exist");
+                throw new KeyNotFoundException("Entity with given id don't exist");
 
             return _entities[id];
         }
@@ -62,21 +76,21 @@ namespace RESTService.Repository
             return _entities.Values.Where(entity => entity.GetType() == typeof(T)).Cast<T>().ToList();
         }
 
-        /// <exception cref="ArgumentException"> "Can't find entity in repository </exception>
-        public void Update(Entity item)
+        public void Update(Entity entity)
         {
-            Update(item.Id, item);
+            Update(entity.Id, entity);
         }
 
-        public void Update(int id, Entity item)
+        /// <exception cref="KeyNotFoundException"> Can't find <paramref name="entity"/> in repository </exception>
+        public void Update(int id, Entity entity)
         {
             if (!_entities.ContainsKey(id))
-                throw new ArgumentException("Can't find entity in repository");
+                throw new KeyNotFoundException("Can't find entity in repository");
 
-            if (id != item.Id)
-                throw new ArgumentException("Given id different from student id");
+            if (entity.Id == 0)
+                entity.Id = id;
 
-            _entities[id] = item;
+            _entities[id] = entity;
         }
     }
 }
