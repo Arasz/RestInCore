@@ -45,11 +45,11 @@ namespace RESTService.Repository
             _entities[entity.Id] = entity;
         }
 
-        /// <exception cref="KeyNotFoundException"> Student with given id don't exist </exception>
+        /// <exception cref="KeyNotFoundException"> <see cref="Entity"/> with given id don't exist </exception>
         public void Delete(Entity entity)
         {
             if (!_entities.ContainsKey(entity.Id))
-                throw new KeyNotFoundException("Student with given id don't exist");
+                throw new KeyNotFoundException("Entity with given id don't exist");
             _entities.Remove(entity.Id);
         }
 
@@ -62,11 +62,11 @@ namespace RESTService.Repository
             }
         }
 
-        /// <exception cref="KeyNotFoundException"> Condition. </exception>
+        /// <exception cref="KeyNotFoundException"> <see cref="Entity"/> with given id don't exist. </exception>
         public Entity Read(int id)
         {
             if (!_entities.ContainsKey(id))
-                throw new KeyNotFoundException("Student with given id don't exist");
+                throw new KeyNotFoundException("Entity with given id don't exist");
 
             return _entities[id];
         }
@@ -81,7 +81,7 @@ namespace RESTService.Repository
             Update(entity.Id, entity);
         }
 
-        /// <exception cref="KeyNotFoundException"> Can't find entity in repository </exception>
+        /// <exception cref="KeyNotFoundException"> Can't find <paramref name="entity"/> in repository </exception>
         public void Update(int id, Entity entity)
         {
             if (!_entities.ContainsKey(id))

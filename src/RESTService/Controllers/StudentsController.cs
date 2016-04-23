@@ -72,7 +72,7 @@ namespace RESTService.Controllers
         /// <param name="studentId"></param>
         /// <param name="markId"></param>
         /// <returns></returns>
-        [HttpDelete("{studentId}/marks/{markID:int?}")]
+        [HttpDelete("{studentId}/marks/{markId:int?}")]
         public IActionResult DeleteMarksForGivenStudent(int studentId, int markId)
         {
             try
