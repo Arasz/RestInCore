@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNet.Mvc;
 using RESTService.Models;
 using RESTService.Repository;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RESTService.Controllers
 {
@@ -8,30 +10,39 @@ namespace RESTService.Controllers
     /// Web service controller 
     /// </summary>
     [Route("api/[controller]")]
-    public class MarkController : BaseController<StudentMark>
+    public class MarksController : Controller
     {
-        public MarkController(IRepository<Entity> entitiesRepository) : base(entitiesRepository)
+        private IRepository<Entity> _repository;
+
+        public MarksController(IRepository<Entity> repository)
         {
+            _repository = repository;
         }
 
-        public override IActionResult Delete()
+        [HttpGet("{id:int?}")]
+        public IActionResult GetMarks(int id)
         {
-            return HttpBadRequest("Wrong request");
-        }
+            var subjects = _repository.ReadAll<Subject>();
 
-        public override IActionResult Delete(int id)
-        {
-            return HttpBadRequest("Wrong request");
-        }
+            var marks = subjects.Aggregate(new List<Mark>(),
+                (list, subject) =>
+                {
+                    list.AddRange(subject.Marks);
+                    return list;
+                });
 
-        public override IActionResult Post(StudentMark entity)
-        {
-            return HttpBadRequest("Wrong request");
-        }
+            if (!marks.Any())
+                return HttpNotFound("There is no mark");
 
-        public override IActionResult Put(int id, StudentMark entity)
-        {
-            return HttpBadRequest("Wrong request");
+            if (id == 0)
+                return Ok(marks);
+
+            var mark = marks.First(m => m.Id == id);
+
+            if (mark == null)
+                return HttpNotFound("Mark with given id doesn't exist");
+
+            return Ok(mark);
         }
     }
 }

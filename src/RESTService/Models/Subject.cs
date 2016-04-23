@@ -12,7 +12,7 @@ namespace RESTService.Models
     public class Subject : Entity
     {
         [DataMember]
-        public IList<StudentMark> Marks { get; private set; } = new List<StudentMark>();
+        public IList<Mark> Marks { get; private set; } = new List<Mark>();
 
         [DataMember]
         public string Name { get; private set; }
@@ -40,7 +40,8 @@ namespace RESTService.Models
 
         public override string ToString()
         {
-            return $"{Name}, {Teacher}, {Marks.Select(mark => $"{mark}, ")}";
+            string marksRepresentation = "";
+            return $"{Name}, {Teacher}, [{Marks.Aggregate(marksRepresentation, (s, mark) => s += $"{mark}, ").TrimEnd(',')}]";
         }
     }
 }

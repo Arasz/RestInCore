@@ -8,12 +8,17 @@ namespace RESTService.Models
     [DataContract]
     public class Entity
     {
+        private static IIdentityProvider<int> _identityProvider;
+
         [DataMember]
         public int Id { get; set; }
 
         public Entity(IIdentityProvider<int> identityProvider)
         {
-            Id = identityProvider?.Id ?? 0;
+            if (_identityProvider == null)
+                _identityProvider = identityProvider;
+
+            Id = _identityProvider?.Id ?? 0;
         }
     }
 }

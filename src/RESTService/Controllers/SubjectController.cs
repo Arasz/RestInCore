@@ -17,18 +17,17 @@ namespace RESTService.Controllers
         {
         }
 
-        [HttpPost("{id}/marks")]
-        public IActionResult AddMarksForGivenSubject(int id, [FromBody] StudentMark mark)
+        [HttpPost("{id}/marks/{studentId}")]
+        public IActionResult AddMarksForGivenSubject(int id, int studentId, [FromBody] Mark mark)
         {
             var subject = _entitiesRepository.Read<Subject>(id);
 
             if (subject == null)
                 return HttpBadRequest($"Wrong {ControllerName} id");
 
-            var newId = _entitiesRepository.Create(mark);
-            subject.Marks.Add(_entitiesRepository.Read<StudentMark>(newId));
+            subject.Marks.Add(mark);
 
-            return CreatedAtRoute("GetMarksForSubject", new { controller = "Subject", id, markId = newId }, mark);
+            return CreatedAtRoute("GetMarksForSubject", new { controller = "Subject", id, studentId }, mark);
         }
 
         /// <summary>
@@ -37,16 +36,26 @@ namespace RESTService.Controllers
         /// <param name="id"></param>
         /// <param name="markId"></param>
         /// <returns> Action result </returns>
-        [HttpDelete("{id}/marks/{markId:int?}", Name = "DeleteMarksForSubject")]
-        public IActionResult DeleteMarksForGivenSubject(int id, int markId)
+        [HttpDelete("{id}/marks/{studentId:int?}/{markId:int?}", Name = "DeleteMarksForSubject")]
+        public IActionResult DeleteMarksForGivenSubject(int id, int studentId, int markId)
         {
-            return ExecuteOperationOnMarks(id, markId, (marks, subject) =>
+            return ExecuteOperationOnMarks(id, studentId, (marks, subject) =>
             {
-                foreach (var studentMark in marks)
+                if (markId > 0)
                 {
-                    subject.Marks.Remove(studentMark);
-                    _entitiesRepository.Delete(studentMark);
+                    var mark = marks.First(m => m.Id == markId);
+
+                    if (mark == null)
+                        return HttpNotFound("Student doesn't have mark of given id");
+
+                    subject.Marks.Remove(mark);
+
+                    return Ok();
                 }
+
+                foreach (var studentMark in marks)
+                    subject.Marks.Remove(studentMark);
+
                 return Ok();
             });
         }
@@ -61,30 +70,54 @@ namespace RESTService.Controllers
         /// Gets marks (or mark when given mark id) for given student 
         /// </summary>
         /// <param name="id"> Student id </param>
-        /// <param name="markId"> MArk id (optional) </param>
+        /// <param name="studentId"></param>
+        /// <param name="markId"></param>
         /// <returns> Student marks/ mark </returns>
-        [HttpGet("{id}/marks/{markId:int?}", Name = "GetMarksForSubject")]
-        public IActionResult GetMarksForGivenStudent(int id, int markId)
+        [HttpGet("{id}/marks/{studentId:int?}/{markId:int?}", Name = "GetMarksForSubject")]
+        public IActionResult GetMarksForGivenStudent(int id, int studentId, int markId)
         {
-            return ExecuteOperationOnMarks(id, markId, (marks, subject) => marks.Count() > 1 ? Ok(marks) : Ok(marks.First()));
+            return ExecuteOperationOnMarks(id, studentId, (marks, subject) =>
+            {
+                if (markId == 0)
+                    return Ok(marks);
+
+                var mark = marks.First(m => m.Id == markId);
+
+                if (mark == null)
+                    return HttpNotFound("Student doesn't have mark of given id");
+
+                return Ok(mark);
+            });
         }
 
-        [HttpPut("{id}/marks/{markId}")]
-        public IActionResult UpdateMarksForGivenSubject(int id, int markId, [FromBody]StudentMark mark)
+        [HttpPut("{id}/marks/{studentId}/{markId}")]
+        public IActionResult UpdateMarksForGivenSubject(int id, int studentId, int markId, [FromBody]Mark mark)
         {
-            return ExecuteOperationOnMarks(id, markId, (marks, subject) =>
+            if (mark == null)
+                return HttpBadRequest("Wrong mark object format");
+
+            return ExecuteOperationOnMarks(id, studentId, (marks, subject) =>
             {
-                int indexOfMark = subject.Marks.IndexOf(marks.First());
+                var firstMark = marks.First(m => m.Id == markId);
+                int indexOfMark = subject.Marks.IndexOf(firstMark);
 
-                _entitiesRepository.Update(markId, mark);
+                if (indexOfMark < 0)
+                    return HttpNotFound("Student doesn't have any marks with given id");
 
-                subject.Marks[indexOfMark] = _entitiesRepository.Read<StudentMark>(markId);
+                mark.Id = firstMark.Id;
+                subject.Marks[indexOfMark] = mark;
 
                 return Ok();
             });
         }
 
-        private IActionResult ExecuteOperationOnMarks(int entityId, int markId, Func<IEnumerable<StudentMark>, Subject, IActionResult> operation = null)
+        /// <summary>
+        /// </summary>
+        /// <param name="entityId"></param>
+        /// <param name="studentId"></param>
+        /// <param name="operation"></param>
+        /// <returns></returns>
+        private IActionResult ExecuteOperationOnMarks(int entityId, int studentId, Func<IEnumerable<Mark>, Subject, IActionResult> operation = null)
         {
             try
             {
@@ -92,22 +125,20 @@ namespace RESTService.Controllers
                 if (subject == null)
                     return HttpBadRequest($"Wrong {ControllerName} id");
 
-                if (markId > 0)
+                if (studentId > 0)
                 {
-                    var mark = _entitiesRepository.Read<StudentMark>(markId);
+                    var marks = subject.Marks.Where(m => m.StudentId == studentId).ToList();
 
-                    if (mark == null || !subject.Marks.Contains(mark))
-                        return HttpBadRequest("Wrong mark id");
+                    if (!marks.Any())
+                        return HttpNotFound($"Student doesn't have any marks");
 
-                    return operation(new List<StudentMark> { mark }, subject);
+                    return operation(marks, subject);
                 }
 
-                var marks = subject.Marks;
-
-                if (!marks.Any())
+                if (!subject.Marks.Any())
                     return HttpNotFound($"{ControllerName} doesn't have any marks");
 
-                return operation(marks, subject);
+                return operation(subject.Marks, subject);
             }
             catch (KeyNotFoundException exception)
             {

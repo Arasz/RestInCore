@@ -8,7 +8,7 @@ namespace RESTService.Models
     /// Student mark data model 
     /// </summary>
     [DataContract]
-    public class StudentMark : Entity
+    public class Mark : Entity
     {
         [DataMember]
         public int StudentId { get; private set; }
@@ -17,9 +17,9 @@ namespace RESTService.Models
         public DateTime SubmitTime { get; private set; }
 
         [DataMember]
-        public Mark Value { get; private set; }
+        public double Value { get; private set; }
 
-        public StudentMark(int studentId, DateTime submitTime, Mark mark, IIdentityProvider<int> identityProvider) : base(identityProvider)
+        public Mark(int studentId, DateTime submitTime, double mark, IIdentityProvider<int> identityProvider) : base(identityProvider)
         {
             StudentId = studentId;
             SubmitTime = submitTime;
@@ -35,26 +35,22 @@ namespace RESTService.Models
 
         public override int GetHashCode()
         {
-            return base.GetHashCode() + StudentId.GetHashCode() + SubmitTime.GetHashCode() + Value.GetHashCode();
+            return Id.GetHashCode() + StudentId.GetHashCode() + SubmitTime.GetHashCode() + Value.GetHashCode();
         }
 
         public override string ToString()
         {
-            return $"{StudentId}, {SubmitTime}, {Value}";
+            return $"{Id}, {StudentId}, {SubmitTime}, {Value}";
         }
-    }
 
-    /// <summary>
-    /// Possible marks 
-    /// </summary>
-    public enum Mark
-    {
-        Two,
-        TwoAndHalf,
-        Three,
-        ThreeAndHalf,
-        Four,
-        FourAndHalf,
-        Five,
+        private void ValidiateMark(double value)
+        {
+            if (value > 5)
+                Value = 5d;
+            else if (value < 2)
+                Value = 2d;
+            else
+                Value = value;
+        }
     }
 }

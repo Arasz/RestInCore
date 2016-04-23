@@ -26,29 +26,33 @@ namespace RESTService.Controllers
         /// Gets marks (or mark when given mark id) for given student 
         /// </summary>
         /// <param name="id"> Student id </param>
-        /// <param name="markId"> MArk id (optional) </param>
         /// <returns> Student marks/ mark </returns>
         [HttpGet("{id}/marks/{markId:int?}")]
         public IActionResult GetMarksForGivenStudent(int id, int markId)
         {
             try
             {
-                if (markId > 0)
-                {
-                    var studentMark = _entitiesRepository.Read(markId) as StudentMark;
+                var subjects = _entitiesRepository.ReadAll<Subject>();
 
-                    if (studentMark == null || id != studentMark.StudentId)
-                        return HttpBadRequest("Wrong mark id");
-
-                    return Ok(studentMark);
-                }
-
-                var marks = _entitiesRepository.ReadAll<StudentMark>().Where(mark => mark.StudentId == id).ToList();
+                var marks = subjects.Aggregate(new List<Mark>(),
+                        (list, subject) =>
+                        {
+                            list.AddRange(subject.Marks.Where(m => m.StudentId == id));
+                            return list;
+                        });
 
                 if (!marks.Any())
                     return HttpNotFound("Student doesn't have any marks");
 
-                return Ok(marks);
+                if (markId == 0)
+                    return Ok(marks);
+
+                var mark = marks.First(m => m.Id == markId);
+
+                if (mark == null)
+                    return HttpNotFound("Student doesn't have mark of given id");
+
+                return Ok(mark);
             }
             catch (KeyNotFoundException exception)
             {
