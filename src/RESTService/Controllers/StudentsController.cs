@@ -28,12 +28,16 @@ namespace RESTService.Controllers
         /// </summary>
         /// <param name="id"> Unique studentId number </param>
         /// <returns> Information about operation state </returns>
-        [HttpDelete("{studentId}")]
+        [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
             try
             {
                 var student = _entitiesRepository.Read(id);
+
+                if (!(student is Student))
+                    return HttpBadRequest("There is no student with given id");
+
                 _entitiesRepository.Delete(student);
 
                 return Ok();
@@ -192,7 +196,7 @@ namespace RESTService.Controllers
         /// <param name="id"> Update student studentId </param>
         /// <param name="student"> New student state </param>
         /// <returns></returns>
-        [HttpPut("{studentId}")]
+        [HttpPut("{id}")]
         public IActionResult Put(int id, [FromBody]Student student)
         {
             if (student == null)

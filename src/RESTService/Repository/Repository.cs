@@ -1,7 +1,7 @@
-﻿using RESTService.Models;
+﻿using System;
+using RESTService.Models;
 using RESTService.Providers;
 using RESTService.Utils;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -56,7 +56,7 @@ namespace RESTService.Repository
         /// <exception cref="ArgumentNullException"> <paramref name="key"/> is null. </exception>
         public void DeleteAll<E>() where E : Entity
         {
-            foreach (var entity in _entities.Where(entity => entity.Value is E))
+            foreach (var entity in _entities.Where(entity => entity.Value is E).ToList())
             {
                 _entities.Remove(entity.Key);
             }
@@ -76,19 +76,19 @@ namespace RESTService.Repository
             return _entities.Values.Where(entity => entity.GetType() == typeof(T)).Cast<T>().ToList();
         }
 
-        /// <exception cref="ArgumentException"> "Can't find entity in repository </exception>
         public void Update(Entity entity)
         {
             Update(entity.Id, entity);
         }
 
+        /// <exception cref="KeyNotFoundException"> Can't find entity in repository </exception>
         public void Update(int id, Entity entity)
         {
             if (!_entities.ContainsKey(id))
-                throw new ArgumentException("Can't find entity in repository");
+                throw new KeyNotFoundException("Can't find entity in repository");
 
-            if (id != entity.Id)
-                throw new ArgumentException("Given id different from student id");
+            if (entity.Id == 0)
+                entity.Id = id;
 
             _entities[id] = entity;
         }
