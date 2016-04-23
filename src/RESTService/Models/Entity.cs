@@ -13,9 +13,9 @@ namespace RESTService.Models
         [DataMember]
         public int Id { get; set; }
 
-        public Entity(IIdentityProvider<int> identityProvider)
+        public Entity(IIdentityProvider<int> identityProvider, bool changeProvider = false)
         {
-            if (_identityProvider == null)
+            if (_identityProvider == null || changeProvider)
                 _identityProvider = identityProvider;
 
             Id = _identityProvider?.Id ?? 0;
