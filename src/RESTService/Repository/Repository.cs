@@ -1,5 +1,4 @@
-﻿using System;
-using RESTService.Models;
+﻿using RESTService.Models;
 using RESTService.Providers;
 using RESTService.Utils;
 using System.Collections.Generic;
@@ -45,7 +44,9 @@ namespace RESTService.Repository
             _entities[entity.Id] = entity;
         }
 
-        /// <exception cref="KeyNotFoundException"> <see cref="Entity"/> with given id don't exist </exception>
+        /// <exception cref="KeyNotFoundException">
+        /// <see cref="Entity"/> with given id don't exist
+        /// </exception>
         public void Delete(Entity entity)
         {
             if (!_entities.ContainsKey(entity.Id))
@@ -62,7 +63,9 @@ namespace RESTService.Repository
             }
         }
 
-        /// <exception cref="KeyNotFoundException"> <see cref="Entity"/> with given id don't exist. </exception>
+        /// <exception cref="KeyNotFoundException">
+        /// <see cref="Entity"/> with given id don't exist.
+        /// </exception>
         public Entity Read(int id)
         {
             if (!_entities.ContainsKey(id))
@@ -81,7 +84,9 @@ namespace RESTService.Repository
             Update(entity.Id, entity);
         }
 
-        /// <exception cref="KeyNotFoundException"> Can't find <paramref name="entity"/> in repository </exception>
+        /// <exception cref="KeyNotFoundException">
+        /// Can't find <paramref name="entity"/> in repository
+        /// </exception>
         public void Update(int id, Entity entity)
         {
             if (!_entities.ContainsKey(id))
