@@ -61,10 +61,7 @@ namespace RESTService.Controllers
         }
 
         [HttpGet("{id}", Name = "GetMethodSubject")]
-        public override IActionResult Get(int id)
-        {
-            return base.Get(id);
-        }
+        public override IActionResult Get(int id) => base.Get(id);
 
         /// <summary>
         /// Gets marks (or mark when given mark id) for given student 

@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
+using Microsoft.AspNet.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Serialization;
 using RESTService.Models;
 using RESTService.Providers;
 using RESTService.Repository;
@@ -46,7 +48,18 @@ namespace RESTService
 
             services.AddApplicationInsightsTelemetry(Configuration);
 
-            services.AddMvc();
+            var mvc = services.AddMvc(configuration =>
+           {
+               configuration.RespectBrowserAcceptHeader = true;
+               configuration.InputFormatters.Add(new XmlDataContractSerializerInputFormatter());
+               configuration.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+           });
+
+            mvc.AddJsonOptions(options =>
+            {
+                options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            });
+
             services.AddSingleton<IRepository<Entity>, Repository.Repository>();
             services.AddSingleton<IIdentityProvider<int>, UniqueIdentityProvider>();
         }
