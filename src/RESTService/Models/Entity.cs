@@ -1,4 +1,5 @@
-﻿using RESTService.Providers;
+﻿using RESTService.Links;
+using RESTService.Providers;
 using System.Runtime.Serialization;
 
 namespace RESTService.Models
@@ -12,6 +13,9 @@ namespace RESTService.Models
 
         [DataMember]
         public int Id { get; set; }
+
+        [DataMember]
+        public Resources Resources { get; }
 
         public Entity(IIdentityProvider<int> identityProvider, bool changeProvider = false)
         {

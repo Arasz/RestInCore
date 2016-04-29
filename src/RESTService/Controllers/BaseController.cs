@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNet.Mvc;
+using RESTService.Links;
 using RESTService.Models;
 using RESTService.Repository;
 using System;
@@ -86,7 +87,10 @@ namespace RESTService.Controllers
                 var entity = _entitiesRepository.Read(id);
 
                 if (entity is T)
+                {
+                    entity.Resources.AddLink(new Link("Self", Url.Action("Get", GetType().Name, id)));
                     return Ok(entity);
+                }
 
                 return HttpBadRequest($"There is no {nameof(T)} with given id");
             }
