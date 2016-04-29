@@ -11,7 +11,6 @@ namespace RESTService.Models
     [DataContract]
     public class Subject : Entity
     {
-        [DataMember]
         public IList<Mark> Marks { get; private set; } = new List<Mark>();
 
         [DataMember]
