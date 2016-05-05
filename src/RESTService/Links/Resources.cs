@@ -9,9 +9,9 @@ namespace RESTService.Links
     [DataContract]
     public class Resources
     {
-        [DataMember]
         private readonly List<Link> _links = new List<Link>();
 
+        [DataMember]
         public IEnumerable<Link> Links { get { return _links; } }
 
         public void AddLink(Link link)

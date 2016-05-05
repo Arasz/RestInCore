@@ -15,7 +15,7 @@ namespace RESTService.Models
         public int Id { get; set; }
 
         [DataMember]
-        public Resources Resources { get; }
+        public Resources Resources { get; private set; } = new Resources();
 
         public Entity(IIdentityProvider<int> identityProvider, bool changeProvider = false)
         {

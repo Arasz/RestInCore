@@ -33,7 +33,7 @@ namespace RESTService.Models
 
             var otherStudent = obj as Student;
 
-            return ToString() == otherStudent.ToString();
+            return ToString() == otherStudent?.ToString();
         }
 
         public override int GetHashCode()

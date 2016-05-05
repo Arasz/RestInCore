@@ -88,7 +88,7 @@ namespace RESTService.Controllers
 
                 if (entity is T)
                 {
-                    entity.Resources.AddLink(new Link("Self", Url.Action("Get", GetType().Name, id)));
+                    entity.Resources.AddLink(new Link("Self", Url.Action("Get", ControllerName)));
                     return Ok(entity);
                 }
 
