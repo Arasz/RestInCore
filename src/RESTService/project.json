@@ -6,7 +6,6 @@
     "emitEntryPoint": true
   },
   "dependencies": {
-    "Microsoft.ApplicationInsights.AspNet": "1.0.0-rc1",
     "Microsoft.AspNet.IISPlatformHandler": "1.0.0-rc1-final",
     "Microsoft.AspNet.Mvc": "6.0.0-rc1-final",
     "Microsoft.AspNet.Server.Kestrel": "1.0.0-rc1-final",
@@ -27,7 +26,8 @@
     "dnx451": {
       "frameworkAssemblies": { "System.Runtime.Serialization": "4.0.0.0" },
       "dependencies": {
-        "Hyprlinkr": "2.0.1"
+        "Hyprlinkr": "2.0.1",
+        "mongocsharpdriver": "2.2.3"
       }
     },
     "dnxcore50": { "dependencies": { "System.Runtime": "4.0.21-beta-23516" } }
