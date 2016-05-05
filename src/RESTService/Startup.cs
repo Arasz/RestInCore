@@ -1,15 +1,15 @@
-﻿using System;
-using Microsoft.AspNet.Builder;
+﻿using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
 using Newtonsoft.Json.Serialization;
+using RESTService.Database;
 using RESTService.Models;
 using RESTService.Providers;
 using RESTService.Repository;
+using System;
 
 namespace RESTService
 {
@@ -61,13 +61,9 @@ namespace RESTService
                 options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
             });
 
+            services.AddSingleton<MongoDbManager>();
             services.AddSingleton<IRepository<Entity>, Repository.Repository>();
             services.AddSingleton<IIdentityProvider<int>, UniqueIdentityProvider>();
-
-            //MongoDB client initialization
-            var mongoClient = new MongoClient(new MongoClientSettings()) { Settings = { Server = new MongoServerAddress("localhost",8004)}};
-            services.AddInstance<IMongoClient>(mongoClient);
-            services.AddInstance(mongoClient.GetDatabase("universityBase"));
 
             var serviceProvider = services.BuildServiceProvider();
             return serviceProvider;

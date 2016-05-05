@@ -26,11 +26,11 @@
     "dnx451": {
       "frameworkAssemblies": { "System.Runtime.Serialization": "4.0.0.0" },
       "dependencies": {
-        "Hyprlinkr": "2.0.1",
-        "mongocsharpdriver": "2.2.3"
+        "MongoDB.Bson": "2.2.3",
+        "MongoDB.Driver": "2.2.3",
+        "MongoDB.Driver.Core": "2.2.3"
       }
-    },
-    "dnxcore50": { "dependencies": { "System.Runtime": "4.0.21-beta-23516" } }
+    }
   },
   "publishExclude": [
     "**.user",
