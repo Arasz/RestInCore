@@ -64,6 +64,7 @@ namespace RESTService
             services.AddSingleton<MongoDbManager>();
             services.AddSingleton<IRepository<Entity>, Repository.Repository>();
             services.AddSingleton<IIdentityProvider<int>, UniqueIdentityProvider>();
+            services.AddSingleton<StudentsRepository>();
 
             var serviceProvider = services.BuildServiceProvider();
             return serviceProvider;

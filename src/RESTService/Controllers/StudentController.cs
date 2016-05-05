@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNet.Mvc;
 using RESTService.Models;
 using RESTService.Repository;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace RESTService.Controllers
 {
@@ -12,14 +14,22 @@ namespace RESTService.Controllers
     [Route("api/[controller]")]
     public class StudentController : BaseController<Student>
     {
-        public StudentController(IRepository<Entity> entitiesRepository) : base(entitiesRepository)
+        private int _id;
+        private StudentsRepository _repo;
+
+        public StudentController(IRepository<Entity> entitiesRepository, StudentsRepository repository) : base(entitiesRepository)
         {
+            _repo = repository;
+            var student = new Student("Artur", "Bocion", DateTime.Now, repository.IdentityProvider);
+            _id = student.Id;
+            //_repo.Create(student);
         }
 
         [HttpGet("{id}", Name = "GetMethodStudent")]
-        public override IActionResult Get(int id)
+        public async Task<IActionResult> Get(int id)
         {
-            return base.Get(id);
+            var output = await _repo.Read(38);
+            return Ok(output);
         }
 
         /// <summary>

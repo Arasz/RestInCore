@@ -1,4 +1,6 @@
-﻿using RESTService.Models;
+﻿using MongoDB.Driver;
+using RESTService.Database;
+using RESTService.Models;
 using RESTService.Providers;
 using RESTService.Utils;
 using System.Collections.Generic;
@@ -20,10 +22,18 @@ namespace RESTService.Repository
         private readonly Dictionary<int, Entity> _entities = new Dictionary<int, Entity>();
 
         private readonly IIdentityProvider<int> _identityProvider;
+        private readonly Dictionary<string, IMongoCollection<Entity>> _mongoCollections;
 
-        public Repository(IIdentityProvider<int> identityProvider)
+        /// <summary>
+        /// </summary>
+        private MongoDbManager _databaseManager;
+
+        public Repository(IIdentityProvider<int> identityProvider, MongoDbManager databaseManager)
         {
+            _databaseManager = databaseManager;
             _identityProvider = identityProvider;
+
+            var studentsCollection = _databaseManager.DefaultDatabase.GetCollection<Student>("students");
 
             IEnumerable<Entity> initializationList = new DataInitializer(identityProvider).Data;
 
