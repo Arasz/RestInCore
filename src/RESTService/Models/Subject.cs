@@ -1,5 +1,4 @@
-﻿using RESTService.Providers;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 
@@ -19,7 +18,7 @@ namespace RESTService.Models
         [DataMember]
         public string Teacher { get; private set; }
 
-        public Subject(string name, string teacher, IIdentityProvider<int> identityProvider) : base(identityProvider)
+        public Subject(string name, string teacher)
         {
             Name = name;
             Teacher = teacher;

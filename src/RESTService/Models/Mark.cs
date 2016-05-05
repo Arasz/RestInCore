@@ -1,5 +1,4 @@
-﻿using RESTService.Providers;
-using System;
+﻿using System;
 using System.Runtime.Serialization;
 
 namespace RESTService.Models
@@ -19,7 +18,7 @@ namespace RESTService.Models
         [DataMember]
         public double Value { get; private set; }
 
-        public Mark(int studentId, DateTime submitTime, double mark, IIdentityProvider<int> identityProvider) : base(identityProvider)
+        public Mark(int studentId, DateTime submitTime, double mark)
         {
             StudentId = studentId;
             SubmitTime = submitTime;

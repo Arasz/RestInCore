@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNet.Mvc;
+using RESTService.Links;
 using RESTService.Models;
 using RESTService.Repository;
+using RESTService.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,24 +14,108 @@ namespace RESTService.Controllers
     /// Controller responsible for students models 
     /// </summary>
     [Route("api/[controller]")]
-    public class StudentController : BaseController<Student>
+    public class StudentController : Controller
     {
-        private int _id;
-        private StudentsRepository _repo;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IRepository<Student> _studentsRepository;
 
-        public StudentController(IRepository<Entity> entitiesRepository, StudentsRepository repository) : base(entitiesRepository)
+        public StudentController(IRepository<Student> studentsRepository, IServiceProvider serviceProvider)
         {
-            _repo = repository;
-            var student = new Student("Artur", "Bocion", DateTime.Now, repository.IdentityProvider);
-            _id = student.Id;
-            //_repo.Create(student);
+            _studentsRepository = studentsRepository;
+            _serviceProvider = serviceProvider;
         }
 
+        /// <summary>
+        /// Delete entity with given studentId number 
+        /// </summary>
+        /// <param name="id"> Unique <paramref name="id"/> number </param>
+        /// <returns> Information about operation state </returns>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var entity = await _studentsRepository.Read(id).ConfigureAwait(false);
+
+                if (entity == null)
+                    return HttpBadRequest($"There is no student with {id} id");
+
+                await _studentsRepository.Delete(entity).ConfigureAwait(false);
+
+                return Ok();
+            }
+            catch (Exception exception)
+            {
+                return HttpNotFound(exception);
+            }
+        }
+
+        /// <summary>
+        /// Delete entities collection 
+        /// </summary>
+        /// <returns> Information about operation state </returns>
+        [HttpDelete]
+        public async Task<IActionResult> Delete()
+        {
+            try
+            {
+                await _studentsRepository.DeleteAll().ConfigureAwait(false);
+
+                return Ok();
+            }
+            catch (Exception exception)
+            {
+                return HttpNotFound(exception);
+            }
+        }
+
+        /// <summary>
+        /// Get entity with given id number 
+        /// </summary>
+        /// <param name="id"> Unique id number </param>
+        /// <returns> Entity with given id number </returns>
         [HttpGet("{id}", Name = "GetMethodStudent")]
         public async Task<IActionResult> Get(int id)
         {
-            var output = await _repo.Read(38);
-            return Ok(output);
+            try
+            {
+                if (id == 0)
+                    return HttpBadRequest("Wrong id number");
+
+                var entity = await _studentsRepository.Read(id).ConfigureAwait(false);
+
+                if (entity == null)
+                    return HttpNotFound($"Entity with {id} can't be found");
+
+                entity.Resources.AddLink(new Link("Self", Url.Action("Get", "Student", new { id })));
+                entity.Resources.AddLink(new Link("Marks", Url.Action("GetMarksForGivenStudent", "Student", new { id })));
+                entity.Resources.AddLink(new Link("Next", Url.Action("Get", "Student", new { id = ++id })));
+
+                return Ok(entity);
+            }
+            catch (Exception exception)
+            {
+                return HttpNotFound(exception);
+            }
+        }
+
+        /// <summary>
+        /// Get all entities 
+        /// </summary>
+        /// <returns> Entities collection </returns>
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var initializer = _serviceProvider.GetService(typeof(DataInitializer)) as DataInitializer;
+
+            await initializer.PopulateBase(false).ConfigureAwait(false);
+
+            var allEntities = await _studentsRepository.ReadAll().ConfigureAwait(false);
+
+            if (allEntities != null)
+                return Ok(allEntities);
+
+            return HttpNotFound();
         }
 
         /// <summary>
@@ -38,11 +124,12 @@ namespace RESTService.Controllers
         /// <param name="id"> Student id </param>
         /// <returns> Student marks/ mark </returns>
         [HttpGet("{id}/marks/{markId:int?}")]
-        public IActionResult GetMarksForGivenStudent(int id, int markId)
+        public async Task<IActionResult> GetMarksForGivenStudent(int id, int markId)
         {
             try
             {
-                var subjects = _entitiesRepository.ReadAll<Subject>();
+                var subjectsRepository = _serviceProvider.GetService(typeof(IRepository<Subject>)) as IRepository<Subject>;
+                var subjects = await subjectsRepository.ReadAll().ConfigureAwait(false);
 
                 var marks = subjects.Aggregate(new List<Mark>(),
                         (list, subject) =>
@@ -64,9 +151,44 @@ namespace RESTService.Controllers
 
                 return Ok(mark);
             }
-            catch (KeyNotFoundException exception)
+            catch (Exception exception)
             {
                 return HttpNotFound(exception);
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Post([FromBody]Student entity)
+        {
+            if (entity == null)
+                return HttpBadRequest();
+
+            await _studentsRepository.Create(entity).ConfigureAwait(false);
+
+            var controllerName = GetType().Name.Replace("Controller", "");
+            return CreatedAtRoute("GetMethod" + controllerName, new { controller = controllerName, id = entity.Id }, entity);
+        }
+
+        /// <summary>
+        /// Updates entity under given id 
+        /// </summary>
+        /// <param name="id"> Update entity id </param>
+        /// <param name="entity"> New entity state </param>
+        /// <returns></returns>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(int id, [FromBody]Student entity)
+        {
+            if (entity == null)
+                return HttpBadRequest();
+
+            try
+            {
+                await _studentsRepository.Update(id, entity).ConfigureAwait(false);
+                return Ok();
+            }
+            catch (Exception exception)
+            {
+                return HttpBadRequest(exception);
             }
         }
     }

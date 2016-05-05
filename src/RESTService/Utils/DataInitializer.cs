@@ -1,8 +1,9 @@
 ﻿using RESTService.Models;
-using RESTService.Providers;
+using RESTService.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace RESTService.Utils
 {
@@ -11,8 +12,6 @@ namespace RESTService.Utils
     /// </summary>
     public class DataInitializer
     {
-        private readonly IIdentityProvider<int> _identityProvider;
-
         private readonly Dictionary<int, double> _possibleMarks = new Dictionary<int, double>
         {
             [0] = 2.0,
@@ -24,21 +23,36 @@ namespace RESTService.Utils
             [6] = 5.0,
         };
 
+        private readonly IRepository<Student> _studentsRepository;
+        private readonly IRepository<Subject> _subjectsRepository;
         private IList<Mark> _marks = new List<Mark>();
         private Random _random = new Random();
         private IList<Student> _students = new List<Student>();
         private IList<Subject> _subjects = new List<Subject>();
         public IEnumerable<Entity> Data { get; }
 
-        public DataInitializer(IIdentityProvider<int> identityProvider)
+        public DataInitializer(IRepository<Subject> subjectsRepository, IRepository<Student> studentsRepository)
         {
-            _identityProvider = identityProvider;
+            _subjectsRepository = subjectsRepository;
+            _studentsRepository = studentsRepository;
 
             InitializeStudents();
             InitializeMarks();
             InitializeSubjects();
 
             Data = _students.Concat<Entity>(_subjects).ToList();
+        }
+
+        public async Task PopulateBase(bool populate)
+        {
+            if (populate != true)
+                return;
+
+            foreach (var student in _students)
+                await _studentsRepository.Create(student).ConfigureAwait(false);
+
+            foreach (var subject in _subjects)
+                await _subjectsRepository.Create(subject).ConfigureAwait(false);
         }
 
         private DateTime GenerateRandomDate(int year = 0)
@@ -56,27 +70,29 @@ namespace RESTService.Utils
 
         private void InitializeMarks()
         {
+            int i = 1;
             foreach (var student in _students)
             {
-                _marks.Add(new Mark(student.Id, GenerateRandomDate(2012), GenerateRandomMark(), _identityProvider));
-                _marks.Add(new Mark(student.Id, GenerateRandomDate(2012), GenerateRandomMark(), _identityProvider));
-                _marks.Add(new Mark(student.Id, GenerateRandomDate(2012), GenerateRandomMark(), _identityProvider));
+                _marks.Add(new Mark(i, GenerateRandomDate(2012), GenerateRandomMark()));
+                _marks.Add(new Mark(i, GenerateRandomDate(2012), GenerateRandomMark()));
+                _marks.Add(new Mark(i, GenerateRandomDate(2012), GenerateRandomMark()));
+                i++;
             }
             _marks.OrderBy(a => _random.Next());
         }
 
         private void InitializeStudents()
         {
-            _students.Add(new Student("Andrzej", "Tkacz", GenerateRandomDate(), _identityProvider));
-            _students.Add(new Student("Basia", "Wilk", GenerateRandomDate(), _identityProvider));
-            _students.Add(new Student("Edward", "Tim", GenerateRandomDate(), _identityProvider));
-            _students.Add(new Student("Miłek", "Boban", GenerateRandomDate(), _identityProvider));
+            _students.Add(new Student("Andrzej", "Tkacz", GenerateRandomDate()));
+            _students.Add(new Student("Basia", "Wilk", GenerateRandomDate()));
+            _students.Add(new Student("Edward", "Tim", GenerateRandomDate()));
+            _students.Add(new Student("Miłek", "Boban", GenerateRandomDate()));
         }
 
         private void InitializeSubjects()
         {
-            _subjects.Add(new Subject("Zarządzanie kotełami", "Naczelny kotli prezes", _identityProvider));
-            _subjects.Add(new Subject("Piesły w środowisku naturalnym", "Doge", _identityProvider));
+            _subjects.Add(new Subject("Zarządzanie kotełami", "Naczelny kotli prezes"));
+            _subjects.Add(new Subject("Piesły w środowisku naturalnym", "Doge"));
 
             foreach (var studentMark in _marks)
             {
