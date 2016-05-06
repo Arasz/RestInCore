@@ -1,5 +1,4 @@
-﻿using RESTService.Providers;
-using System;
+﻿using System;
 using System.Runtime.Serialization;
 
 namespace RESTService.Models
@@ -19,7 +18,7 @@ namespace RESTService.Models
         [DataMember]
         public string Surname { get; private set; }
 
-        public Student(string name, string surname, DateTime birthday, IIdentityProvider<int> identityProvider) : base(identityProvider)
+        public Student(string name, string surname, DateTime birthday)
         {
             Name = name;
             Surname = surname;

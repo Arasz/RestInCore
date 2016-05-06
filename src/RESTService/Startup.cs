@@ -9,6 +9,8 @@ using RESTService.Database;
 using RESTService.Models;
 using RESTService.Providers;
 using RESTService.Repository;
+using RESTService.Services;
+using RESTService.Utils;
 using System;
 
 namespace RESTService
@@ -62,8 +64,18 @@ namespace RESTService
             });
 
             services.AddSingleton<MongoDbManager>();
-            services.AddSingleton<IRepository<Entity>, Repository.Repository>();
-            services.AddSingleton<IIdentityProvider<int>, UniqueIdentityProvider>();
+            services.AddSingleton<IRepository<Student>, StudentsRepository>();
+            services.AddSingleton<IIdentityProvider<Student>, UniqueIdentityProvider<Student>>();
+            services.AddSingleton<IIdentityAssignService<Student>, IdentityAssignService<Student>>();
+
+            services.AddSingleton<IRepository<Subject>, SubjectsRepository>();
+            services.AddSingleton<IIdentityProvider<Subject>, UniqueIdentityProvider<Subject>>();
+            services.AddSingleton<IIdentityAssignService<Subject>, IdentityAssignService<Subject>>();
+
+            services.AddSingleton<IIdentityProvider<Mark>, UniqueIdentityProvider<Mark>>();
+            services.AddSingleton<IIdentityAssignService<Mark>, IdentityAssignService<Mark>>();
+
+            services.AddSingleton<DataInitializer>();
 
             var serviceProvider = services.BuildServiceProvider();
             return serviceProvider;

@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNet.Mvc;
+using RESTService.Links;
 using RESTService.Models;
 using RESTService.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace RESTService.Controllers
 {
@@ -11,23 +13,75 @@ namespace RESTService.Controllers
     /// Web service controller 
     /// </summary>
     [Route("api/[controller]")]
-    public class SubjectController : BaseController<Subject>
+    public class SubjectController : Controller
     {
-        public SubjectController(IRepository<Entity> entitiesRepository) : base(entitiesRepository)
+        private readonly IServiceProvider _serviceProvider;
+        private readonly SubjectsRepository _subjectsRepository;
+
+        public SubjectController(IRepository<Subject> subjectsRepository, IServiceProvider serviceProvider)
         {
+            _subjectsRepository = subjectsRepository as SubjectsRepository;
+            _serviceProvider = serviceProvider;
         }
 
         [HttpPost("{id}/marks/{studentId}")]
-        public IActionResult AddMarksForGivenSubject(int id, int studentId, [FromBody] Mark mark)
+        public async Task<IActionResult> AddMarksForGivenSubject(int id, int studentId, [FromBody] Mark mark)
         {
-            var subject = _entitiesRepository.Read<Subject>(id);
+            //await
 
-            if (subject == null)
-                return HttpBadRequest($"Wrong {ControllerName} id");
+            try
+            {
+                await _subjectsRepository.CreateMarkForSubject(id, mark).ConfigureAwait(false);
+                return CreatedAtRoute("GetMarksForSubject", new { controller = "Subject", id, studentId }, mark);
+            }
+            catch (Exception exception)
+            {
+                return HttpBadRequest(exception.Message);
+            }
+        }
 
-            subject.Marks.Add(mark);
+        /// <summary>
+        /// Delete entity with given studentId number 
+        /// </summary>
+        /// <param name="id"> Unique <paramref name="id"/> number </param>
+        /// <returns> Information about operation state </returns>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                var entity = await _subjectsRepository.Read(id).ConfigureAwait(false);
 
-            return CreatedAtRoute("GetMarksForSubject", new { controller = "Subject", id, studentId }, mark);
+                if (entity == null)
+                    return HttpBadRequest($"There is no student with {id} id");
+
+                await _subjectsRepository.Delete(entity).ConfigureAwait(false);
+
+                return Ok();
+            }
+            catch (Exception exception)
+            {
+                return HttpNotFound(exception);
+            }
+        }
+
+        /// <summary>
+        /// Delete entities collection 
+        /// </summary>
+        /// <returns> Information about operation state </returns>
+        [HttpDelete]
+        public async Task<IActionResult> Delete()
+        {
+            try
+            {
+                await _subjectsRepository.DeleteAll().ConfigureAwait(false);
+
+                return Ok();
+            }
+            catch (Exception exception)
+            {
+                return HttpNotFound(exception);
+            }
         }
 
         /// <summary>
@@ -37,9 +91,9 @@ namespace RESTService.Controllers
         /// <param name="markId"></param>
         /// <returns> Action result </returns>
         [HttpDelete("{id}/marks/{studentId:int?}/{markId:int?}", Name = "DeleteMarksForSubject")]
-        public IActionResult DeleteMarksForGivenSubject(int id, int studentId, int markId)
+        public async Task<IActionResult> DeleteMarksForGivenSubject(int id, int studentId, int markId)
         {
-            return ExecuteOperationOnMarks(id, studentId, (marks, subject) =>
+            return await ExecuteOperationOnMarks(id, studentId, async (marks, subject) =>
             {
                 if (markId > 0)
                 {
@@ -49,6 +103,7 @@ namespace RESTService.Controllers
                         return HttpNotFound("Student doesn't have mark of given id");
 
                     subject.Marks.Remove(mark);
+                    await _subjectsRepository.UpdateMarksForSubject(subject.Id, subject.Marks).ConfigureAwait(false);
 
                     return Ok();
                 }
@@ -57,11 +112,45 @@ namespace RESTService.Controllers
                     subject.Marks.Remove(studentMark);
 
                 return Ok();
-            });
+            }).ConfigureAwait(false);
         }
 
         [HttpGet("{id}", Name = "GetMethodSubject")]
-        public override IActionResult Get(int id) => base.Get(id);
+        public async Task<IActionResult> Get(int id)
+        {
+            try
+            {
+                if (id == 0)
+                    return HttpBadRequest("Wrong id number");
+
+                var entity = await _subjectsRepository.Read(id).ConfigureAwait(false);
+
+                if (entity == null)
+                    return HttpNotFound($"Entity with {id} can't be found");
+
+                entity.Resources.AddLink(new Link("Self", Url.Action("Get", "Subject")));
+                return Ok(entity);
+            }
+            catch (Exception exception)
+            {
+                return HttpNotFound(exception);
+            }
+        }
+
+        /// <summary>
+        /// Get all entities 
+        /// </summary>
+        /// <returns> Entities collection </returns>
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var allEntities = await _subjectsRepository.ReadAll();
+
+            if (allEntities != null)
+                return Ok(allEntities);
+
+            return HttpNotFound();
+        }
 
         /// <summary>
         /// Gets marks (or mark when given mark id) for given student 
@@ -71,9 +160,9 @@ namespace RESTService.Controllers
         /// <param name="markId"></param>
         /// <returns> Student marks/ mark </returns>
         [HttpGet("{id}/marks/{studentId:int?}/{markId:int?}", Name = "GetMarksForSubject")]
-        public IActionResult GetMarksForGivenStudent(int id, int studentId, int markId)
+        public async Task<IActionResult> GetMarksForGivenStudent(int id, int studentId, int markId)
         {
-            return ExecuteOperationOnMarks(id, studentId, (marks, subject) =>
+            return await ExecuteOperationOnMarks(id, studentId, async (marks, subject) =>
             {
                 if (markId == 0)
                     return Ok(marks);
@@ -84,16 +173,56 @@ namespace RESTService.Controllers
                     return HttpNotFound("Student doesn't have mark of given id");
 
                 return Ok(mark);
-            });
+            }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Creates new <paramref name="entity"/> in repository 
+        /// </summary>
+        /// <param name="entity"> New <paramref name="entity"/> </param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> Post([FromBody]Subject entity)
+        {
+            if (entity == null)
+                return HttpBadRequest();
+
+            await _subjectsRepository.Create(entity).ConfigureAwait(false);
+
+            var controllerName = GetType().Name.Replace("Controller", "");
+            return CreatedAtRoute("GetMethod" + controllerName, new { controller = controllerName, id = entity.Id }, entity);
+        }
+
+        /// <summary>
+        /// Updates entity under given id 
+        /// </summary>
+        /// <param name="id"> Update entity id </param>
+        /// <param name="entity"> New entity state </param>
+        /// <returns></returns>
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(int id, [FromBody]Subject entity)
+        {
+            if (entity == null)
+                return HttpBadRequest();
+
+            try
+            {
+                await _subjectsRepository.Update(id, entity).ConfigureAwait(false);
+                return Ok();
+            }
+            catch (Exception exception)
+            {
+                return HttpBadRequest(exception);
+            }
         }
 
         [HttpPut("{id}/marks/{studentId}/{markId}")]
-        public IActionResult UpdateMarksForGivenSubject(int id, int studentId, int markId, [FromBody]Mark mark)
+        public async Task<IActionResult> UpdateMarksForGivenSubject(int id, int studentId, int markId, [FromBody]Mark mark)
         {
             if (mark == null)
                 return HttpBadRequest("Wrong mark object format");
 
-            return ExecuteOperationOnMarks(id, studentId, (marks, subject) =>
+            return await ExecuteOperationOnMarks(id, studentId, async (marks, subject) =>
             {
                 var firstMark = marks.First(m => m.Id == markId);
                 int indexOfMark = subject.Marks.IndexOf(firstMark);
@@ -104,8 +233,10 @@ namespace RESTService.Controllers
                 mark.Id = firstMark.Id;
                 subject.Marks[indexOfMark] = mark;
 
+                await _subjectsRepository.UpdateMarksForSubject(subject.Id, subject.Marks).ConfigureAwait(false);
+
                 return Ok();
-            });
+            }).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -114,13 +245,13 @@ namespace RESTService.Controllers
         /// <param name="studentId"></param>
         /// <param name="operation"></param>
         /// <returns></returns>
-        private IActionResult ExecuteOperationOnMarks(int entityId, int studentId, Func<IEnumerable<Mark>, Subject, IActionResult> operation = null)
+        private async Task<IActionResult> ExecuteOperationOnMarks(int entityId, int studentId, Func<IEnumerable<Mark>, Subject, Task<IActionResult>> operation = null)
         {
             try
             {
-                var subject = _entitiesRepository.Read<Subject>(entityId);
+                var subject = await _subjectsRepository.Read(entityId).ConfigureAwait(false);
                 if (subject == null)
-                    return HttpBadRequest($"Wrong {ControllerName} id");
+                    return HttpBadRequest($"Wrong {nameof(Subject)} id");
 
                 if (studentId > 0)
                 {
@@ -129,15 +260,15 @@ namespace RESTService.Controllers
                     if (!marks.Any())
                         return HttpNotFound($"Student doesn't have any marks");
 
-                    return operation(marks, subject);
+                    return await operation(marks, subject);
                 }
 
                 if (!subject.Marks.Any())
-                    return HttpNotFound($"{ControllerName} doesn't have any marks");
+                    return HttpNotFound($"{nameof(Subject)} doesn't have any marks");
 
-                return operation(subject.Marks, subject);
+                return await operation(subject.Marks, subject);
             }
-            catch (KeyNotFoundException exception)
+            catch (Exception exception)
             {
                 return HttpNotFound(exception);
             }

@@ -3,6 +3,7 @@ using RESTService.Models;
 using RESTService.Repository;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace RESTService.Controllers
 {
@@ -12,17 +13,19 @@ namespace RESTService.Controllers
     [Route("api/[controller]")]
     public class MarksController : Controller
     {
-        private IRepository<Entity> _repository;
+        /// <summary>
+        /// </summary>
+        private readonly IRepository<Subject> _subjectRepository;
 
-        public MarksController(IRepository<Entity> repository)
+        public MarksController(IRepository<Subject> subjectRepository)
         {
-            _repository = repository;
+            _subjectRepository = subjectRepository;
         }
 
         [HttpGet("{id:int?}")]
-        public IActionResult GetMarks(int id)
+        public async Task<IActionResult> GetMarks(int id)
         {
-            var subjects = _repository.ReadAll<Subject>();
+            var subjects = await _subjectRepository.ReadAll().ConfigureAwait(false);
 
             var marks = subjects.Aggregate(new List<Mark>(),
                 (list, subject) =>
