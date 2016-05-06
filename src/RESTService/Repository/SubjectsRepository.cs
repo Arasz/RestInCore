@@ -56,7 +56,8 @@ namespace RESTService.Repository
         {
             var marksWithIdentity = marks.Select(mark =>
             {
-                _markIdentityAssignService.AssignIdentity(mark);
+                if (mark.Id == 0)
+                    _markIdentityAssignService.AssignIdentity(mark);
                 return mark;
             }).ToList();
             await UpdateMarksForSubject(id, marksWithIdentity).ConfigureAwait(false);
@@ -121,14 +122,18 @@ namespace RESTService.Repository
 
         public async Task Update(int id, Subject entity)
         {
-            var filter = _filterBuilder.Where(student => student.Id == id);
-            await _mongoCollection.DeleteManyAsync(filter).ConfigureAwait(false);
+            var filter = Builders<Subject>.Filter.Where(subject => subject.Id == id);
+            var update = Builders<Subject>.Update
+                .Set(subject => subject.Marks, entity.Marks)
+                .Set(subject => subject.Name, entity.Name)
+                .Set(subject => subject.Teacher, entity.Teacher);
+            await _mongoCollection.UpdateOneAsync(filter, update).ConfigureAwait(false);
         }
 
         public async Task UpdateMarksForSubject(int id, IEnumerable<Mark> marks)
         {
             var filter = Builders<Subject>.Filter.Where(subject => subject.Id == id);
-            var update = Builders<Subject>.Update.Set(subject => subject.Marks, marks);
+            var update = Builders<Subject>.Update.Set(subject => subject.Marks, marks.ToList());
             await _mongoCollection.UpdateOneAsync(filter, update).ConfigureAwait(false);
         }
     }

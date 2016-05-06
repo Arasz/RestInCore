@@ -128,7 +128,12 @@ namespace RESTService.Controllers
                 if (entity == null)
                     return HttpNotFound($"Entity with {id} can't be found");
 
-                entity.Resources.AddLink(new Link("Self", Url.Action("Get", "Subject")));
+                entity.Resources.AddLinks(
+                new Link("Parent", $"/api/subject/"),
+                new Link("Self", $"/api/subject/{id}"),
+                new Link("Next", $"/api/subject/{id + 1}"),
+                new Link("Next", $"/api/subject/{id}/marks")
+                );
                 return Ok(entity);
             }
             catch (Exception exception)
@@ -168,6 +173,12 @@ namespace RESTService.Controllers
                     return Ok(marks);
 
                 var mark = marks.First(m => m.Id == markId);
+
+                mark.Resources.AddLinks(
+                    new Link("Parent", $"/api/subject/{id}/marks/{studentId}"),
+                    new Link("Self", $"/api/subject/{id}/marks/{studentId}/{markId}"),
+                    new Link("Next", $"/api/subject/{id}/marks/{studentId}/{markId + 1}")
+                    );
 
                 if (mark == null)
                     return HttpNotFound("Student doesn't have mark of given id");

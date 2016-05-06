@@ -47,7 +47,7 @@ namespace RESTService.Repository
         {
             var filter = _filterBuilder.Where(student => student.Id == id);
             var result = await _mongoCollection.FindAsync(filter).ConfigureAwait(false);
-            return result.First();
+            return result?.First();
         }
 
         public async Task<IEnumerable<Student>> ReadAll()
@@ -62,7 +62,11 @@ namespace RESTService.Repository
         public async Task Update(int id, Student entity)
         {
             var filter = _filterBuilder.Where(student => student.Id == id);
-            await _mongoCollection.DeleteManyAsync(filter).ConfigureAwait(false);
+            var update = Builders<Student>.Update
+                .Set(student => student.Birthday, entity.Birthday)
+                .Set(student => student.Name, entity.Name)
+                .Set(student => student.Surname, entity.Surname);
+            await _mongoCollection.UpdateOneAsync(filter, update).ConfigureAwait(false);
         }
     }
 }

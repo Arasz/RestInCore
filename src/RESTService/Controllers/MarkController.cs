@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNet.Mvc;
+using RESTService.Links;
 using RESTService.Models;
 using RESTService.Repository;
 using System.Collections.Generic;
@@ -41,6 +42,12 @@ namespace RESTService.Controllers
                 return Ok(marks);
 
             var mark = marks.First(m => m.Id == id);
+
+            mark.Resources.AddLinks(
+                new Link("Parent", $"/api/marks"),
+                new Link("Self", $"/api/marks/{id}"),
+                new Link("Next", $"/api/marks/{++id}")
+                );
 
             if (mark == null)
                 return HttpNotFound("Mark with given id doesn't exist");
