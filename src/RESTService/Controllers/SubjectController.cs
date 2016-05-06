@@ -27,16 +27,17 @@ namespace RESTService.Controllers
         [HttpPost("{id}/marks/{studentId}")]
         public async Task<IActionResult> AddMarksForGivenSubject(int id, int studentId, [FromBody] Mark mark)
         {
-            var subject = await _subjectsRepository.Read(id).ConfigureAwait(false);
+            //await
 
-            //await _subjectsRepository.CreateMarkForSubject(id, mark).ConfigureAwait(false);
-
-            if (subject == null)
-                return HttpBadRequest($"Wrong {nameof(Subject)} id");
-
-            subject.Marks.Add(mark);
-
-            return CreatedAtRoute("GetMarksForSubject", new { controller = "Subject", id, studentId }, mark);
+            try
+            {
+                await _subjectsRepository.CreateMarkForSubject(id, mark).ConfigureAwait(false);
+                return CreatedAtRoute("GetMarksForSubject", new { controller = "Subject", id, studentId }, mark);
+            }
+            catch (Exception exception)
+            {
+                return HttpBadRequest(exception.Message);
+            }
         }
 
         /// <summary>
@@ -92,7 +93,7 @@ namespace RESTService.Controllers
         [HttpDelete("{id}/marks/{studentId:int?}/{markId:int?}", Name = "DeleteMarksForSubject")]
         public async Task<IActionResult> DeleteMarksForGivenSubject(int id, int studentId, int markId)
         {
-            return await ExecuteOperationOnMarks(id, studentId, (marks, subject) =>
+            return await ExecuteOperationOnMarks(id, studentId, async (marks, subject) =>
             {
                 if (markId > 0)
                 {
@@ -102,6 +103,7 @@ namespace RESTService.Controllers
                         return HttpNotFound("Student doesn't have mark of given id");
 
                     subject.Marks.Remove(mark);
+                    await _subjectsRepository.UpdateMarksForSubject(subject.Id, subject.Marks).ConfigureAwait(false);
 
                     return Ok();
                 }
@@ -160,7 +162,7 @@ namespace RESTService.Controllers
         [HttpGet("{id}/marks/{studentId:int?}/{markId:int?}", Name = "GetMarksForSubject")]
         public async Task<IActionResult> GetMarksForGivenStudent(int id, int studentId, int markId)
         {
-            return await ExecuteOperationOnMarks(id, studentId, (marks, subject) =>
+            return await ExecuteOperationOnMarks(id, studentId, async (marks, subject) =>
             {
                 if (markId == 0)
                     return Ok(marks);
@@ -220,7 +222,7 @@ namespace RESTService.Controllers
             if (mark == null)
                 return HttpBadRequest("Wrong mark object format");
 
-            return await ExecuteOperationOnMarks(id, studentId, (marks, subject) =>
+            return await ExecuteOperationOnMarks(id, studentId, async (marks, subject) =>
             {
                 var firstMark = marks.First(m => m.Id == markId);
                 int indexOfMark = subject.Marks.IndexOf(firstMark);
@@ -230,6 +232,8 @@ namespace RESTService.Controllers
 
                 mark.Id = firstMark.Id;
                 subject.Marks[indexOfMark] = mark;
+
+                await _subjectsRepository.UpdateMarksForSubject(subject.Id, subject.Marks).ConfigureAwait(false);
 
                 return Ok();
             }).ConfigureAwait(false);
@@ -241,7 +245,7 @@ namespace RESTService.Controllers
         /// <param name="studentId"></param>
         /// <param name="operation"></param>
         /// <returns></returns>
-        private async Task<IActionResult> ExecuteOperationOnMarks(int entityId, int studentId, Func<IEnumerable<Mark>, Subject, IActionResult> operation = null)
+        private async Task<IActionResult> ExecuteOperationOnMarks(int entityId, int studentId, Func<IEnumerable<Mark>, Subject, Task<IActionResult>> operation = null)
         {
             try
             {
@@ -256,13 +260,13 @@ namespace RESTService.Controllers
                     if (!marks.Any())
                         return HttpNotFound($"Student doesn't have any marks");
 
-                    return operation(marks, subject);
+                    return await operation(marks, subject);
                 }
 
                 if (!subject.Marks.Any())
                     return HttpNotFound($"{nameof(Subject)} doesn't have any marks");
 
-                return operation(subject.Marks, subject);
+                return await operation(subject.Marks, subject);
             }
             catch (Exception exception)
             {

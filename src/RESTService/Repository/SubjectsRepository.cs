@@ -125,11 +125,11 @@ namespace RESTService.Repository
             await _mongoCollection.DeleteManyAsync(filter).ConfigureAwait(false);
         }
 
-        private Task UpdateMarksForSubject(int id, IEnumerable<Mark> marks)
+        public async Task UpdateMarksForSubject(int id, IEnumerable<Mark> marks)
         {
             var filter = Builders<Subject>.Filter.Where(subject => subject.Id == id);
             var update = Builders<Subject>.Update.Set(subject => subject.Marks, marks);
-            return _mongoCollection.UpdateOneAsync(filter, update);
+            await _mongoCollection.UpdateOneAsync(filter, update).ConfigureAwait(false);
         }
     }
 }
