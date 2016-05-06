@@ -3,6 +3,7 @@ using RESTService.Database;
 using RESTService.Models;
 using RESTService.Services;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RESTService.Repository
@@ -25,6 +26,30 @@ namespace RESTService.Repository
             _mongoCollection = _databaseManager.DefaultDatabase.GetCollection<Subject>("subjects");
         }
 
+        public async Task AddMarkForSubject(int id, Mark mark)
+        {
+            var marks = await ReadAllMarksForSubject(id).ConfigureAwait(false);
+            IList<Mark> marksList;
+            if (marks != null)
+            {
+                marksList = marks.ToList();
+                marksList.Add(mark);
+            }
+            else
+            {
+                marksList = new List<Mark> { mark };
+            }
+
+            await AddMarksForSubject(id, marksList).ConfigureAwait(false);
+        }
+
+        public async Task AddMarksForSubject(int id, IEnumerable<Mark> marks)
+        {
+            var filter = Builders<Subject>.Filter.Where(subject => subject.Id == id);
+            var update = Builders<Subject>.Update.Set(subject => subject.Marks, marks);
+            await _mongoCollection.UpdateOneAsync(filter, update).ConfigureAwait(false);
+        }
+
         public async Task Create(Subject entity)
         {
             _identityAssignService.AssignIdentity(entity);
@@ -33,7 +58,7 @@ namespace RESTService.Repository
 
         public async Task Delete(Subject entity)
         {
-            var filter = _filterBuilder.Where(student => student.Id == entity.Id);
+            var filter = _filterBuilder.Where(subject => subject.Id == entity.Id);
             await _mongoCollection.DeleteOneAsync(filter).ConfigureAwait(false);
         }
 
@@ -45,7 +70,7 @@ namespace RESTService.Repository
 
         public async Task<Subject> Read(int id)
         {
-            var filter = _filterBuilder.Where(student => student.Id == id);
+            var filter = _filterBuilder.Where(subject => subject.Id == id);
             var result = await _mongoCollection.FindAsync(filter).ConfigureAwait(false);
             return result.First();
         }
@@ -55,6 +80,14 @@ namespace RESTService.Repository
             var filter = _filterBuilder.Empty;
             var result = await _mongoCollection.FindAsync(filter).ConfigureAwait(false);
             return result.ToList();
+        }
+
+        public async Task<IEnumerable<Mark>> ReadAllMarksForSubject(int id)
+        {
+            var projection = Builders<Subject>.Projection.Expression(subject => new { subject.Marks });
+            var result = await _mongoCollection.Find(subject => subject.Id == id)
+                .Project(projection).FirstOrDefaultAsync().ConfigureAwait(false);
+            return result.Marks;
         }
 
         public async Task Update(Subject entity) => await Update(entity.Id, entity).ConfigureAwait(false);
