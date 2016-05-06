@@ -1,4 +1,5 @@
-﻿using RESTService.Links;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using RESTService.Links;
 using System.Runtime.Serialization;
 
 namespace RESTService.Models
@@ -11,7 +12,7 @@ namespace RESTService.Models
         [DataMember]
         public int Id { get; set; }
 
-        [DataMember]
-        public Resources Resources { get; private set; } = new Resources();
+        [DataMember, BsonIgnore]
+        public Resources Resources { get; set; } = new Resources();
     }
 }

@@ -2,7 +2,9 @@
 using RESTService.Database;
 using RESTService.Models;
 using RESTService.Services;
+using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace RESTService.Repository
@@ -55,6 +57,12 @@ namespace RESTService.Repository
             var filter = _filterBuilder.Empty;
             var result = await _mongoCollection.FindAsync(filter).ConfigureAwait(false);
             return result.ToList();
+        }
+
+        public async Task<IEnumerable<Student>> ReadMatchingStudent(Expression<Func<Student, bool>> matchExpression)
+        {
+            var filter = Builders<Student>.Filter.Where(matchExpression);
+            return await _mongoCollection.Find(filter).ToListAsync();
         }
 
         public async Task Update(Student entity) => await Update(entity.Id, entity).ConfigureAwait(false);

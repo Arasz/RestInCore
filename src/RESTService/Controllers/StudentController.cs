@@ -17,11 +17,11 @@ namespace RESTService.Controllers
     public class StudentController : Controller
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IRepository<Student> _studentsRepository;
+        private readonly StudentsRepository _studentsRepository;
 
         public StudentController(IRepository<Student> studentsRepository, IServiceProvider serviceProvider)
         {
-            _studentsRepository = studentsRepository;
+            _studentsRepository = studentsRepository as StudentsRepository;
             _serviceProvider = serviceProvider;
         }
 
@@ -87,10 +87,12 @@ namespace RESTService.Controllers
                 if (entity == null)
                     return HttpNotFound($"Entity with {id} can't be found");
 
+                //HACK: Obejście problemu
+                entity.Resources = new Resources();
                 entity.Resources.AddLinks(
                     new Link("Parent", $"/api/student/"),
                     new Link("Self", $"/api/student/{id}/"),
-                    new Link("Next", $"/api/student/{++id}/"),
+                    new Link("Next", $"/api/student/{id + 1}/"),
                     new Link("Grades", $"/api/student/{id}/marks/")
                     );
 
@@ -107,8 +109,26 @@ namespace RESTService.Controllers
         /// </summary>
         /// <returns> Entities collection </returns>
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery]string name, [FromQuery]string surname)
         {
+            if (name != null && surname != null)
+            {
+                var students = await _studentsRepository.ReadMatchingStudent(student => student.Surname == surname && student.Name == name);
+                return Ok(students);
+            }
+
+            if (name != null)
+            {
+                var students = await _studentsRepository.ReadMatchingStudent(student => student.Name == name);
+                return Ok(students);
+            }
+
+            if (surname != null)
+            {
+                var students = await _studentsRepository.ReadMatchingStudent(student => student.Surname == surname);
+                return Ok(students);
+            }
+
             var initializer = _serviceProvider.GetService(typeof(DataInitializer)) as DataInitializer;
 
             await initializer.PopulateBase(false).ConfigureAwait(false);
