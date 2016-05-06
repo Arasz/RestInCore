@@ -24,7 +24,7 @@ namespace RESTService.Utils
         };
 
         private readonly IRepository<Student> _studentsRepository;
-        private readonly IRepository<Subject> _subjectsRepository;
+        private readonly SubjectsRepository _subjectsRepository;
         private IList<Mark> _marks = new List<Mark>();
         private Random _random = new Random();
         private IList<Student> _students = new List<Student>();
@@ -33,7 +33,7 @@ namespace RESTService.Utils
 
         public DataInitializer(IRepository<Subject> subjectsRepository, IRepository<Student> studentsRepository)
         {
-            _subjectsRepository = subjectsRepository;
+            _subjectsRepository = subjectsRepository as SubjectsRepository;
             _studentsRepository = studentsRepository;
 
             InitializeStudents();
@@ -52,7 +52,10 @@ namespace RESTService.Utils
                 await _studentsRepository.Create(student).ConfigureAwait(false);
 
             foreach (var subject in _subjects)
+            {
                 await _subjectsRepository.Create(subject).ConfigureAwait(false);
+                await _subjectsRepository.CreateMarksForSubject(subject.Id, subject.Marks).ConfigureAwait(false);
+            }
         }
 
         private DateTime GenerateRandomDate(int year = 0)

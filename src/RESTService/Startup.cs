@@ -72,6 +72,9 @@ namespace RESTService
             services.AddSingleton<IIdentityProvider<Subject>, UniqueIdentityProvider<Subject>>();
             services.AddSingleton<IIdentityAssignService<Subject>, IdentityAssignService<Subject>>();
 
+            services.AddSingleton<IIdentityProvider<Mark>, UniqueIdentityProvider<Mark>>();
+            services.AddSingleton<IIdentityAssignService<Mark>, IdentityAssignService<Mark>>();
+
             services.AddSingleton<DataInitializer>();
 
             var serviceProvider = services.BuildServiceProvider();

@@ -1,5 +1,6 @@
 ﻿using MongoDB.Driver;
 using RESTService.Database;
+using RESTService.Exceptions;
 using RESTService.Models;
 using RESTService.Services;
 using System.Collections.Generic;
@@ -12,21 +13,29 @@ namespace RESTService.Repository
     {
         private readonly FilterDefinitionBuilder<Subject> _filterBuilder = new FilterDefinitionBuilder<Subject>();
         private readonly IIdentityAssignService<Subject> _identityAssignService;
+        private readonly IIdentityAssignService<Mark> _markIdentityAssignService;
         private readonly IMongoCollection<Subject> _mongoCollection;
 
         /// <summary>
         /// </summary>
         private MongoDbManager _databaseManager;
 
-        public SubjectsRepository(IIdentityAssignService<Subject> identityAssignService, MongoDbManager databaseManager)
+        public SubjectsRepository(IIdentityAssignService<Subject> identityAssignService, IIdentityAssignService<Mark> markIdentityAssignService, MongoDbManager databaseManager)
         {
             _identityAssignService = identityAssignService;
+            _markIdentityAssignService = markIdentityAssignService;
             _databaseManager = databaseManager;
 
             _mongoCollection = _databaseManager.DefaultDatabase.GetCollection<Subject>("subjects");
         }
 
-        public async Task AddMarkForSubject(int id, Mark mark)
+        public async Task Create(Subject entity)
+        {
+            _identityAssignService.AssignIdentity(entity);
+            await _mongoCollection.InsertOneAsync(entity).ConfigureAwait(false);
+        }
+
+        public async Task CreateMarkForSubject(int id, Mark mark)
         {
             var marks = await ReadAllMarksForSubject(id).ConfigureAwait(false);
             IList<Mark> marksList;
@@ -40,20 +49,17 @@ namespace RESTService.Repository
                 marksList = new List<Mark> { mark };
             }
 
-            await AddMarksForSubject(id, marksList).ConfigureAwait(false);
+            await CreateMarksForSubject(id, marksList).ConfigureAwait(false);
         }
 
-        public async Task AddMarksForSubject(int id, IEnumerable<Mark> marks)
+        public async Task CreateMarksForSubject(int id, IEnumerable<Mark> marks)
         {
-            var filter = Builders<Subject>.Filter.Where(subject => subject.Id == id);
-            var update = Builders<Subject>.Update.Set(subject => subject.Marks, marks);
-            await _mongoCollection.UpdateOneAsync(filter, update).ConfigureAwait(false);
-        }
-
-        public async Task Create(Subject entity)
-        {
-            _identityAssignService.AssignIdentity(entity);
-            await _mongoCollection.InsertOneAsync(entity).ConfigureAwait(false);
+            var marksWithIdentity = marks.Select(mark =>
+            {
+                _markIdentityAssignService.AssignIdentity(mark);
+                return mark;
+            }).ToList();
+            await UpdateMarksForSubject(id, marksWithIdentity).ConfigureAwait(false);
         }
 
         public async Task Delete(Subject entity)
@@ -66,6 +72,27 @@ namespace RESTService.Repository
         {
             var filter = _filterBuilder.Empty;
             await _mongoCollection.DeleteManyAsync(filter).ConfigureAwait(false);
+        }
+
+        public async Task DeleteAllMarksForSubject(int id, int markId)
+        {
+            await UpdateMarksForSubject(id, null).ConfigureAwait(false);
+        }
+
+        /// <exception cref="DeleteMarkException"> Condition. </exception>
+        public async Task DeleteMarkForSubject(int id, int markId)
+        {
+            var marks = await ReadAllMarksForSubject(id).ConfigureAwait(false);
+
+            if (marks == null)
+                throw new DeleteMarkException(markId, id, "No mark was found in subject");
+
+            var markToRemove = marks.FirstOrDefault(mark => mark.Id == markId);
+            if (markToRemove == null)
+                throw new DeleteMarkException(markId, id, "No mark of given id was found in subject");
+            var marksList = marks.ToList();
+            marksList.Remove(markToRemove);
+            await UpdateMarksForSubject(id, marksList).ConfigureAwait(false);
         }
 
         public async Task<Subject> Read(int id)
@@ -96,6 +123,13 @@ namespace RESTService.Repository
         {
             var filter = _filterBuilder.Where(student => student.Id == id);
             await _mongoCollection.DeleteManyAsync(filter).ConfigureAwait(false);
+        }
+
+        private Task UpdateMarksForSubject(int id, IEnumerable<Mark> marks)
+        {
+            var filter = Builders<Subject>.Filter.Where(subject => subject.Id == id);
+            var update = Builders<Subject>.Update.Set(subject => subject.Marks, marks);
+            return _mongoCollection.UpdateOneAsync(filter, update);
         }
     }
 }

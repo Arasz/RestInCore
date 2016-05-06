@@ -16,11 +16,11 @@ namespace RESTService.Controllers
     public class SubjectController : Controller
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IRepository<Subject> _subjectsRepository;
+        private readonly SubjectsRepository _subjectsRepository;
 
         public SubjectController(IRepository<Subject> subjectsRepository, IServiceProvider serviceProvider)
         {
-            _subjectsRepository = subjectsRepository;
+            _subjectsRepository = subjectsRepository as SubjectsRepository;
             _serviceProvider = serviceProvider;
         }
 
@@ -28,6 +28,8 @@ namespace RESTService.Controllers
         public async Task<IActionResult> AddMarksForGivenSubject(int id, int studentId, [FromBody] Mark mark)
         {
             var subject = await _subjectsRepository.Read(id).ConfigureAwait(false);
+
+            //await _subjectsRepository.CreateMarkForSubject(id, mark).ConfigureAwait(false);
 
             if (subject == null)
                 return HttpBadRequest($"Wrong {nameof(Subject)} id");
