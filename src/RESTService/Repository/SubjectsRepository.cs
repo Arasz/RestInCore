@@ -1,10 +1,12 @@
-﻿using MongoDB.Driver;
+﻿using System;
+using MongoDB.Driver;
 using RESTService.Database;
 using RESTService.Exceptions;
 using RESTService.Models;
 using RESTService.Services;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace RESTService.Repository
@@ -101,6 +103,11 @@ namespace RESTService.Repository
             var filter = _filterBuilder.Where(subject => subject.Id == id);
             var result = await _mongoCollection.FindAsync(filter).ConfigureAwait(false);
             return result.First();
+        }
+        public async Task<IEnumerable<Subject>> ReadMatchingStudent(Expression<Func<Subject, bool>> matchExpression)
+        {
+            var filter = Builders<Subject>.Filter.Where(matchExpression);
+            return await _mongoCollection.Find(filter).ToListAsync();
         }
 
         public async Task<IEnumerable<Subject>> ReadAll()

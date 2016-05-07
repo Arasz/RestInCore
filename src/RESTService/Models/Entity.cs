@@ -9,10 +9,15 @@ namespace RESTService.Models
     [DataContract]
     public class Entity
     {
+        public Entity()
+        {
+            Resources = new Resources();
+        }
+
         [DataMember]
         public int Id { get; set; }
 
         [DataMember, BsonIgnore]
-        public Resources Resources { get; set; } = new Resources();
+        public Resources Resources { get; set; }
     }
 }

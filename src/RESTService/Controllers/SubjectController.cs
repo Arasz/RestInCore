@@ -128,6 +128,7 @@ namespace RESTService.Controllers
                 if (entity == null)
                     return HttpNotFound($"Entity with {id} can't be found");
 
+                entity.Resources = new Resources();
                 entity.Resources.AddLinks(
                 new Link("Parent", $"/api/subject/"),
                 new Link("Self", $"/api/subject/{id}"),
@@ -147,8 +148,14 @@ namespace RESTService.Controllers
         /// </summary>
         /// <returns> Entities collection </returns>
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery]string teacher)
         {
+            if (teacher != null)
+            {
+                var result = await _subjectsRepository.ReadMatchingStudent(subject => subject.Teacher == teacher);
+                return Ok(result);
+            }
+
             var allEntities = await _subjectsRepository.ReadAll();
 
             if (allEntities != null)
@@ -165,7 +172,7 @@ namespace RESTService.Controllers
         /// <param name="markId"></param>
         /// <returns> Student marks/ mark </returns>
         [HttpGet("{id}/marks/{studentId:int?}/{markId:int?}", Name = "GetMarksForSubject")]
-        public async Task<IActionResult> GetMarksForGivenStudent(int id, int studentId, int markId)
+        public async Task<IActionResult> GetMarksForGivenStudent(int id,[FromQuery] int studentId, int markId)
         {
             return await ExecuteOperationOnMarks(id, studentId, async (marks, subject) =>
             {

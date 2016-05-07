@@ -12,7 +12,7 @@ namespace RESTService.Links
         private readonly List<Link> _links = new List<Link>();
 
         [DataMember]
-        public IEnumerable<Link> Links { get { return _links; } }
+        public IEnumerable<Link> Links => _links;
 
         public void AddLink(Link link)
         {
