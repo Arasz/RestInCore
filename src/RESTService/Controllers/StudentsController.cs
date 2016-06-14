@@ -17,11 +17,11 @@ namespace RESTService.Controllers
     public class StudentsController : Controller
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IRepository<Student> _studentsRepository;
+        private readonly StudentsRepository _studentsRepository;
 
         public StudentsController(IRepository<Student> studentsRepository, IServiceProvider serviceProvider)
         {
-            _studentsRepository = studentsRepository;
+            _studentsRepository = studentsRepository as StudentsRepository;
             _serviceProvider = serviceProvider;
         }
 
@@ -87,10 +87,12 @@ namespace RESTService.Controllers
                 if (entity == null)
                     return HttpNotFound($"Entity with {id} can't be found");
 
+                //HACK: Obejście problemu
+                entity.Resources = new Resources();
                 entity.Resources.AddLinks(
                     new Link("Parent", $"/api/student/"),
                     new Link("Self", $"/api/student/{id}/"),
-                    new Link("Next", $"/api/student/{++id}/"),
+                    new Link("Next", $"/api/student/{id + 1}/"),
                     new Link("Grades", $"/api/student/{id}/marks/")
                     );
 
@@ -107,8 +109,46 @@ namespace RESTService.Controllers
         /// </summary>
         /// <returns> Entities collection </returns>
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery]string name, [FromQuery]string surname,
+            [FromQuery]DateTime afterDate, [FromQuery]DateTime beforeDate)
         {
+            if (name != null && surname != null)
+            {
+                var students = await _studentsRepository.ReadMatchingStudent(student => student.Surname == surname && student.Name == name);
+                return Ok(students);
+            }
+
+            if (name != null)
+            {
+                var students = await _studentsRepository.ReadMatchingStudent(student => student.Name == name);
+                return Ok(students);
+            }
+
+            if (surname != null)
+            {
+                var students = await _studentsRepository.ReadMatchingStudent(student => student.Surname == surname);
+                return Ok(students);
+            }
+
+            if (afterDate != default(DateTime) && beforeDate != default(DateTime))
+            {
+                var students = await _studentsRepository.ReadMatchingStudent(student =>
+                student.Birthday.CompareTo(afterDate) > 0 && student.Birthday.CompareTo(beforeDate) < 0);
+                return Ok(students);
+            }
+
+            if (afterDate != default(DateTime))
+            {
+                var students = await _studentsRepository.ReadMatchingStudent(student => student.Birthday.CompareTo(afterDate) > 0);
+                return Ok(students);
+            }
+
+            if (beforeDate != default(DateTime))
+            {
+                var students = await _studentsRepository.ReadMatchingStudent(student => student.Birthday.CompareTo(beforeDate) < 0);
+                return Ok(students);
+            }
+
             var initializer = _serviceProvider.GetService(typeof(DataInitializer)) as DataInitializer;
 
             await initializer.PopulateBase(false).ConfigureAwait(false);
@@ -127,7 +167,7 @@ namespace RESTService.Controllers
         /// <param name="id"> Student id </param>
         /// <returns> Student marks/ mark </returns>
         [HttpGet("{id}/marks/{markId:int?}")]
-        public async Task<IActionResult> GetMarksForGivenStudent(int id, int markId)
+        public async Task<IActionResult> GetMarksForGivenStudent(int id, int markId, [FromQuery]double? greaterThan, [FromQuery]double? lessThan)
         {
             try
             {
@@ -145,7 +185,24 @@ namespace RESTService.Controllers
                     return HttpNotFound("Student doesn't have any marks");
 
                 if (markId == 0)
+                {
+                    if (greaterThan != null && lessThan != null)
+                    {
+                        var result = marks.Where(mark1 => mark1.Value > greaterThan.Value && mark1.Value < lessThan.Value);
+                        return Ok(result.ToList());
+                    }
+                    if (greaterThan != null)
+                    {
+                        var result = marks.Where(mark1 => mark1.Value > greaterThan.Value);
+                        return Ok(result.ToList());
+                    }
+                    if (lessThan != null)
+                    {
+                        var result = marks.Where(mark1 => mark1.Value < lessThan.Value);
+                        return Ok(result.ToList());
+                    }
                     return Ok(marks);
+                }
 
                 var mark = marks.First(m => m.Id == markId);
 
