@@ -14,12 +14,12 @@ namespace RESTService.Controllers
     /// Controller responsible for students models 
     /// </summary>
     [Route("api/[controller]")]
-    public class StudentController : Controller
+    public class StudentsController : Controller
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IRepository<Student> _studentsRepository;
 
-        public StudentController(IRepository<Student> studentsRepository, IServiceProvider serviceProvider)
+        public StudentsController(IRepository<Student> studentsRepository, IServiceProvider serviceProvider)
         {
             _studentsRepository = studentsRepository;
             _serviceProvider = serviceProvider;
@@ -74,7 +74,7 @@ namespace RESTService.Controllers
         /// </summary>
         /// <param name="id"> Unique id number </param>
         /// <returns> Entity with given id number </returns>
-        [HttpGet("{id}", Name = "GetMethodStudent")]
+        [HttpGet("{id}", Name = "GetMethodStudents")]
         public async Task<IActionResult> Get(int id)
         {
             try

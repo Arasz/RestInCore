@@ -14,7 +14,7 @@ namespace RESTService.Database
 
         public string ServerHostName { get; set; } = @"localhost";
 
-        public int ServerPort { get; set; } = 8004;
+        public int ServerPort { get; set; } = 27017;
 
         public MongoDbManager()
         {

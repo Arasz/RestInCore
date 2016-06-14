@@ -17,7 +17,8 @@
     "Microsoft.Extensions.Logging.Debug": "1.0.0-rc1-final",
     "System.Runtime.Serialization.Primitives": "4.1.0",
     "Microsoft.AspNet.Mvc.Formatters.Xml": "6.0.0-rc1-final",
-    "EnumerableExtensions": "2.6.0"
+    "EnumerableExtensions": "2.6.0",
+    "Microsoft.AspNet.Cors": "6.0.0-rc1-final"
   },
   "exclude": [
     "wwwroot",

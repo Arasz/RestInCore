@@ -12,6 +12,7 @@ using RESTService.Repository;
 using RESTService.Services;
 using RESTService.Utils;
 using System;
+using Newtonsoft.Json;
 
 namespace RESTService
 {
@@ -38,11 +39,19 @@ namespace RESTService
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
+            app.UseCors(builder => builder
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .WithExposedHeaders("Access-Control-Allow-Origin"));
+
             app.UseIISPlatformHandler();
 
             app.UseStaticFiles();
 
             app.UseMvc();
+
+
         }
 
         // This method gets called by the runtime. Use this method to add services to the container
@@ -50,6 +59,7 @@ namespace RESTService
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
+            services.AddCors();
 
             var mvc = services.AddMvc(configuration =>
            {
@@ -61,7 +71,10 @@ namespace RESTService
             mvc.AddJsonOptions(options =>
             {
                 options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                options.SerializerSettings.DateFormatString = @"yyyy-MM-dd";
             });
+
+
 
             services.AddSingleton<MongoDbManager>();
             services.AddSingleton<IRepository<Student>, StudentsRepository>();

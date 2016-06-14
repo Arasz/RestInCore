@@ -13,12 +13,12 @@ namespace RESTService.Controllers
     /// Web service controller 
     /// </summary>
     [Route("api/[controller]")]
-    public class SubjectController : Controller
+    public class SubjectsController : Controller
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly SubjectsRepository _subjectsRepository;
 
-        public SubjectController(IRepository<Subject> subjectsRepository, IServiceProvider serviceProvider)
+        public SubjectsController(IRepository<Subject> subjectsRepository, IServiceProvider serviceProvider)
         {
             _subjectsRepository = subjectsRepository as SubjectsRepository;
             _serviceProvider = serviceProvider;
@@ -32,7 +32,7 @@ namespace RESTService.Controllers
             try
             {
                 await _subjectsRepository.CreateMarkForSubject(id, mark).ConfigureAwait(false);
-                return CreatedAtRoute("GetMarksForSubject", new { controller = "Subject", id, studentId }, mark);
+                return CreatedAtRoute("GetMarksForSubject", new { controller = "Subjects", id, studentId }, mark);
             }
             catch (Exception exception)
             {
@@ -90,7 +90,7 @@ namespace RESTService.Controllers
         /// <param name="id"></param>
         /// <param name="markId"></param>
         /// <returns> Action result </returns>
-        [HttpDelete("{id}/marks/{studentId:int?}/{markId:int?}", Name = "DeleteMarksForSubject")]
+        [HttpDelete("{id}/marks/{studentId:int?}/{markId:int?}", Name = "DeleteMarksForSubjects")]
         public async Task<IActionResult> DeleteMarksForGivenSubject(int id, int studentId, int markId)
         {
             return await ExecuteOperationOnMarks(id, studentId, async (marks, subject) =>
@@ -115,7 +115,7 @@ namespace RESTService.Controllers
             }).ConfigureAwait(false);
         }
 
-        [HttpGet("{id}", Name = "GetMethodSubject")]
+        [HttpGet("{id}", Name = "GetMethodSubjects")]
         public async Task<IActionResult> Get(int id)
         {
             try
@@ -164,7 +164,7 @@ namespace RESTService.Controllers
         /// <param name="studentId"></param>
         /// <param name="markId"></param>
         /// <returns> Student marks/ mark </returns>
-        [HttpGet("{id}/marks/{studentId:int?}/{markId:int?}", Name = "GetMarksForSubject")]
+        [HttpGet("{id}/marks/{studentId:int?}/{markId:int?}", Name = "GetMarksForSubjects")]
         public async Task<IActionResult> GetMarksForGivenStudent(int id, int studentId, int markId)
         {
             return await ExecuteOperationOnMarks(id, studentId, async (marks, subject) =>
