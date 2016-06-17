@@ -1,13 +1,15 @@
-﻿using System;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 using RESTService.Database;
 using RESTService.Exceptions;
 using RESTService.Models;
 using RESTService.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using MongoDB.Bson;
 
 namespace RESTService.Repository
 {
@@ -77,6 +79,26 @@ namespace RESTService.Repository
             await _mongoCollection.DeleteManyAsync(filter).ConfigureAwait(false);
         }
 
+        public async Task DeleteAllMarksForStudent(int studentId)
+        {
+            var subjects = await ReadAll();
+            var tasks = new List<Task>();
+            foreach (var subject in subjects)
+            {
+                var id = subject.Id;
+
+                var marks = await ReadAllMarksForSubject(id).ConfigureAwait(false);
+
+                var marksToRemove = marks.Where(mark => mark.StudentId == studentId).ToList();
+
+                foreach (var mark in marksToRemove)
+                {
+                    tasks.Add(DeleteMarkForSubject(id, mark.Id));
+                }
+            }
+            Task.WaitAll(tasks.ToArray());
+        }
+
         public async Task DeleteAllMarksForSubject(int id, int markId)
         {
             await UpdateMarksForSubject(id, null).ConfigureAwait(false);
@@ -104,11 +126,6 @@ namespace RESTService.Repository
             var result = await _mongoCollection.FindAsync(filter).ConfigureAwait(false);
             return result.First();
         }
-        public async Task<IEnumerable<Subject>> ReadMatchingStudent(Expression<Func<Subject, bool>> matchExpression)
-        {
-            var filter = Builders<Subject>.Filter.Where(matchExpression);
-            return await _mongoCollection.Find(filter).ToListAsync();
-        }
 
         public async Task<IEnumerable<Subject>> ReadAll()
         {
@@ -123,6 +140,19 @@ namespace RESTService.Repository
             var result = await _mongoCollection.Find(subject => subject.Id == id)
                 .Project(projection).FirstOrDefaultAsync().ConfigureAwait(false);
             return result.Marks;
+        }
+
+        public async Task<IEnumerable<Subject>> ReadMatchingStudent(Expression<Func<Subject, bool>> matchExpression)
+        {
+            var filter = Builders<Subject>.Filter.Where(matchExpression);
+            return await _mongoCollection.Find(filter).ToListAsync();
+        }
+
+        public async Task<IEnumerable<Subject>> ReadMatchingStudentByRegex(Expression<Func<Subject, object>> field, string regex)
+        {
+            BsonRegularExpression regularExpression  = new BsonRegularExpression(regex);
+            var filter = Builders<Subject>.Filter.Regex(field, regularExpression);
+            return await _mongoCollection.Find(filter).ToListAsync();
         }
 
         public async Task Update(Subject entity) => await Update(entity.Id, entity).ConfigureAwait(false);

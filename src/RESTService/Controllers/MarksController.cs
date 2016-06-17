@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNet.Mvc;
+﻿using System;
+using Microsoft.AspNet.Mvc;
 using RESTService.Links;
 using RESTService.Models;
 using RESTService.Repository;
@@ -24,16 +25,20 @@ namespace RESTService.Controllers
         }
 
         [HttpGet("{id:int?}")]
-        public async Task<IActionResult> GetMarks(int id)
+        public async Task<IActionResult> GetMarks(int id,[FromQuery] int value, [FromQuery] DateTime date, [FromQuery] int studentId)
         {
             var subjects = await _subjectRepository.ReadAll().ConfigureAwait(false);
 
-            var marks = subjects.Aggregate(new List<Mark>(),
-                (list, subject) =>
-                {
-                    list.AddRange(subject.Marks);
-                    return list;
-                });
+            var marks = subjects.SelectMany(subject => subject.Marks);
+
+            if (value != 0 && date != default(DateTime) && studentId != 0)
+                marks = marks.Where(mark1 =>(mark1.SubmitTime.Date == date.Date) && (mark1.Value == value) && (mark1.StudentId == studentId)).ToList();
+            if (value != 0 )
+                marks = marks.Where(mark1 => (mark1.Value == value)).ToList();
+            if ( date != default(DateTime))
+                marks = marks.Where(mark1 => (mark1.SubmitTime.Date == date.Date)).ToList();
+            if (studentId != 0)
+                marks = marks.Where(mark1 => (mark1.StudentId == studentId)).ToList();
 
             if (!marks.Any())
                 return HttpNotFound("There is no mark");

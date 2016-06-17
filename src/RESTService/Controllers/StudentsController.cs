@@ -18,10 +18,13 @@ namespace RESTService.Controllers
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly StudentsRepository _studentsRepository;
+        private readonly SubjectsRepository _subjectsRepository;
 
-        public StudentsController(IRepository<Student> studentsRepository, IServiceProvider serviceProvider)
+        public StudentsController(IRepository<Student> studentsRepository, IRepository<Subject> subjectRepository,
+            IServiceProvider serviceProvider)
         {
             _studentsRepository = studentsRepository as StudentsRepository;
+            _subjectsRepository = subjectRepository as SubjectsRepository;
             _serviceProvider = serviceProvider;
         }
 
@@ -40,6 +43,7 @@ namespace RESTService.Controllers
                 if (entity == null)
                     return HttpBadRequest($"There is no student with {id} id");
 
+                await _subjectsRepository.DeleteAllMarksForStudent(id).ConfigureAwait(false);
                 await _studentsRepository.Delete(entity).ConfigureAwait(false);
 
                 return Ok();
@@ -120,13 +124,13 @@ namespace RESTService.Controllers
 
             if (name != null)
             {
-                var students = await _studentsRepository.ReadMatchingStudent(student => student.Name == name);
+                var students = await _studentsRepository.ReadMatchingStudentByRegex(student => student.Name, $"{name}");
                 return Ok(students);
             }
 
             if (surname != null)
             {
-                var students = await _studentsRepository.ReadMatchingStudent(student => student.Surname == surname);
+                var students = await _studentsRepository.ReadMatchingStudentByRegex(student => student.Surname, $"{surname}");
                 return Ok(students);
             }
 

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using MongoDB.Bson;
 
 namespace RESTService.Repository
 {
@@ -62,6 +63,13 @@ namespace RESTService.Repository
         public async Task<IEnumerable<Student>> ReadMatchingStudent(Expression<Func<Student, bool>> matchExpression)
         {
             var filter = Builders<Student>.Filter.Where(matchExpression);
+            return await _mongoCollection.Find(filter).ToListAsync();
+        }
+
+        public async Task<IEnumerable<Student>> ReadMatchingStudentByRegex(Expression<Func<Student, object>> field, string pattern)
+        {
+            var bsonRegex = new BsonRegularExpression(pattern);
+            var filter = Builders<Student>.Filter.Regex(field, bsonRegex);
             return await _mongoCollection.Find(filter).ToListAsync();
         }
 

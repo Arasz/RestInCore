@@ -17,22 +17,28 @@ namespace RESTService.Controllers
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly SubjectsRepository _subjectsRepository;
+        private StudentsRepository _studentRepository;
 
-        public SubjectsController(IRepository<Subject> subjectsRepository, IServiceProvider serviceProvider)
+        public SubjectsController(IRepository<Subject> subjectsRepository, IRepository<Student> studentRepository, IServiceProvider serviceProvider)
         {
+            _studentRepository = studentRepository as StudentsRepository;
             _subjectsRepository = subjectsRepository as SubjectsRepository;
             _serviceProvider = serviceProvider;
         }
 
-        [HttpPost("{id}/marks/{studentId}")]
-        public async Task<IActionResult> AddMarksForGivenSubject(int id, int studentId, [FromBody] Mark mark)
+        [HttpPost("{id}/marks")]
+        public async Task<IActionResult> AddMarksForGivenSubject(int id, [FromBody] Mark mark)
         {
             //await
 
             try
             {
+                var marks = await _subjectsRepository.ReadAllMarksForSubject(id);
+                var students = await _studentRepository.ReadMatchingStudent(student => student.Id == mark.StudentId);
+                if (!students.Any())
+                    return HttpBadRequest();
                 await _subjectsRepository.CreateMarkForSubject(id, mark).ConfigureAwait(false);
-                return CreatedAtRoute("GetMarksForSubject", new { controller = "Subjects", id, studentId }, mark);
+                return CreatedAtRoute("GetMarksForSubjects", new { controller = "Subjects", id, studentId = mark.StudentId }, mark);
             }
             catch (Exception exception)
             {
@@ -90,8 +96,8 @@ namespace RESTService.Controllers
         /// <param name="id"></param>
         /// <param name="markId"></param>
         /// <returns> Action result </returns>
-        [HttpDelete("{id}/marks/{studentId:int?}/{markId:int?}", Name = "DeleteMarksForSubjects")]
-        public async Task<IActionResult> DeleteMarksForGivenSubject(int id, int studentId, int markId)
+        [HttpDelete("{id}/marks/{markId:int?}/{studentId:int?}", Name = "DeleteMarksForSubjects")]
+        public async Task<IActionResult> DeleteMarksForGivenSubject(int id, int markId, int studentId)
         {
             return await ExecuteOperationOnMarks(id, studentId, async (marks, subject) =>
             {
@@ -148,11 +154,19 @@ namespace RESTService.Controllers
         /// </summary>
         /// <returns> Entities collection </returns>
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery]string teacher)
+        public async Task<IActionResult> GetAll([FromQuery]string teacher, [FromQuery] string name)
         {
+            if (name != null)
+            {
+                var result = await _subjectsRepository.ReadMatchingStudentByRegex(subject =>
+                    subject.Name, $"{name}");
+                return Ok(result);
+            }
+
             if (teacher != null)
             {
-                var result = await _subjectsRepository.ReadMatchingStudent(subject => subject.Teacher == teacher);
+                var result = await _subjectsRepository.ReadMatchingStudentByRegex(subject =>
+                    subject.Teacher, $"{teacher}").ConfigureAwait(false);
                 return Ok(result);
             }
 
@@ -277,13 +291,13 @@ namespace RESTService.Controllers
                     var marks = subject.Marks.Where(m => m.StudentId == studentId).ToList();
 
                     if (!marks.Any())
-                        return HttpNotFound($"Student doesn't have any marks");
+                        return Ok(new List<Mark>());
 
                     return await operation(marks, subject);
                 }
 
                 if (!subject.Marks.Any())
-                    return HttpNotFound($"{nameof(Subject)} doesn't have any marks");
+                    return Ok(new List<Mark>());
 
                 return await operation(subject.Marks, subject);
             }
