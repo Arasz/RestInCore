@@ -250,7 +250,7 @@ namespace RESTService.Controllers
             try
             {
                 await _studentsRepository.Update(id, entity).ConfigureAwait(false);
-                return Ok();
+                return Ok(entity);
             }
             catch (Exception exception)
             {
